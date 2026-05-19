@@ -682,6 +682,7 @@ export function PortfolioProvider({ children }: { children: React.ReactNode }) {
     } catch (err) {
       console.error(err);
       localStorage.setItem("portfolio_personal_info", JSON.stringify(updated));
+      throw err;
     }
   };
 

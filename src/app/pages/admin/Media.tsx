@@ -1,6 +1,6 @@
 import { useState, useRef } from "react";
 import { motion } from "motion/react";
-import { Upload, FileText, Image as ImageIcon, Check, Eye, Download, ShieldAlert } from "lucide-react";
+import { Upload, FileText, Image as ImageIcon, Check, Download, ShieldAlert } from "lucide-react";
 import { usePortfolio } from "../../context/PortfolioContext";
 
 export function AdminMedia() {
@@ -71,12 +71,8 @@ export function AdminMedia() {
       try {
         const base64String = reader.result as string;
         
-        let finalBase64 = base64String;
-        // Bypasses compression completely if image is already small (<700KB) to show raw real image.
-        // Otherwise, uses a premium 1200px HD resolution compression to safely prevent Firestore size crashes.
-        if (file.size > 700 * 1024) {
-          finalBase64 = await compressImage(base64String, 1200, 1200);
-        }
+        // Always compress the profile picture to a safe size (500x500 max) to ensure it fits within Firestore's 1MB document limit
+        const finalBase64 = await compressImage(base64String, 500, 500);
 
         await updatePersonalInfo({ profilePic: finalBase64 });
         setProfileSuccess(true);
