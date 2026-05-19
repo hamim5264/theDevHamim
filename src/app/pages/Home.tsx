@@ -4,6 +4,7 @@ import { ArrowRight, Sparkles, Rocket, Brain, Target, Star, Download } from "luc
 import { Navigation } from "../components/Navigation";
 import { usePortfolio } from "../context/PortfolioContext";
 import resumePdf from "../../../assets/Resume of Hamim_Flutter & AI Developer.pdf";
+import { ProfileImage } from "../components/ProfileImage";
 
 
 export function Home() {
@@ -120,8 +121,7 @@ export function Home() {
 
               {/* Profile Image with Hover Zoom & Glowing Border */}
               <div className="absolute inset-0 rounded-full overflow-hidden border border-white/20 shadow-[0_0_50px_rgba(168,85,247,0.15)] group bg-gradient-to-br from-gray-900 to-black">
-                <img 
-                  src={personalInfo.profilePic || "/assets/hamim.png"} 
+                <ProfileImage 
                   alt={personalInfo.fullName} 
                   className="w-full h-full object-cover object-center transform group-hover:scale-105 transition-transform duration-700 ease-out"
                 />
