@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from "motion/react";
 import { useParams, Link } from "react-router";
 import { ExternalLink, Github, ArrowLeft, CheckCircle, Info, Star, ShieldAlert } from "lucide-react";
 import { useState } from "react";
+import { usePortfolio } from "../context/PortfolioContext";
 
 export function ProjectDetail() {
   const { projectId } = useParams();
@@ -333,7 +334,21 @@ export function ProjectDetail() {
     }
   };
 
-  const project = projectData[projectId || ""] || {
+  const { projects } = usePortfolio();
+  const dbProject = projects.find(p => String(p.id) === String(projectId));
+
+  const project = projectData[projectId || ""] || (dbProject ? {
+    name: dbProject.name,
+    tagline: dbProject.category,
+    description: dbProject.description,
+    tech: dbProject.tech || [],
+    features: [],
+    impact: dbProject.impact || "Mobile/Web App",
+    metrics: ["Highly Secure Systems", "Robust Architecture", "Excellent Performance"],
+    status: dbProject.status || "Active",
+    liveLink: dbProject.liveLink || "",
+    githubLink: dbProject.githubLink || ""
+  } : null) || {
     name: "PROJECT SPECIFICATION",
     tagline: "Dynamic technical profile loading...",
     description: "Check out details of other projects in the dynamic portfolio list.",
@@ -387,14 +402,26 @@ export function ProjectDetail() {
             </p>
             <div className="flex flex-wrap gap-4">
               <button 
-                onClick={() => setShowAlert(true)}
+                onClick={() => {
+                  if (project.liveLink && project.liveLink.startsWith("http")) {
+                    window.open(project.liveLink, "_blank", "noopener,noreferrer");
+                  } else {
+                    setShowAlert(true);
+                  }
+                }}
                 className="px-8 py-4 bg-white text-black hover:bg-gray-200 rounded-lg transition-all duration-300 hover:scale-105 font-semibold tracking-wide flex items-center gap-2 cursor-pointer"
               >
                 <ExternalLink className="w-5 h-5" />
                 LIVE DEMO
               </button>
               <button 
-                onClick={() => setShowAlert(true)}
+                onClick={() => {
+                  if (project.githubLink && project.githubLink.startsWith("http")) {
+                    window.open(project.githubLink, "_blank", "noopener,noreferrer");
+                  } else {
+                    setShowAlert(true);
+                  }
+                }}
                 className="px-8 py-4 bg-white/5 border border-white/10 rounded-lg hover:bg-white/10 transition-all duration-300 backdrop-blur-sm font-semibold tracking-wide flex items-center gap-2 cursor-pointer"
               >
                 <Github className="w-5 h-5" />

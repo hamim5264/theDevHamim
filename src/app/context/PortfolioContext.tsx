@@ -14,6 +14,8 @@ export interface Project {
   image: string;
   users?: string;
   lastUpdated?: string;
+  liveLink?: string;
+  githubLink?: string;
 }
 
 export interface Skill {

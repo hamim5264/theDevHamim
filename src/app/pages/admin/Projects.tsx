@@ -21,7 +21,9 @@ export function AdminProjects() {
     status: "Live",
     image: "🚀",
     users: "Live",
-    lastUpdated: "Today"
+    lastUpdated: "Today",
+    liveLink: "",
+    githubLink: ""
   });
 
   const [techInput, setTechInput] = useState("");
@@ -58,7 +60,9 @@ export function AdminProjects() {
       status: "Live",
       image: "🚀",
       users: "Live",
-      lastUpdated: "Today"
+      lastUpdated: "Today",
+      liveLink: "",
+      githubLink: ""
     });
     setTechInput("");
     setIsEditing(false);
@@ -366,6 +370,29 @@ export function AdminProjects() {
                       type="text"
                       value={currentProject.users}
                       onChange={(e) => setCurrentProject({ ...currentProject, users: e.target.value })}
+                      className="w-full px-4 py-3 rounded-xl bg-white/5 border border-white/10 text-white focus:outline-none focus:border-white/30"
+                    />
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm text-gray-400 mb-2">Live Demo URL (optional)</label>
+                    <input
+                      type="url"
+                      value={currentProject.liveLink || ""}
+                      placeholder="https://..."
+                      onChange={(e) => setCurrentProject({ ...currentProject, liveLink: e.target.value })}
+                      className="w-full px-4 py-3 rounded-xl bg-white/5 border border-white/10 text-white focus:outline-none focus:border-white/30"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm text-gray-400 mb-2">GitHub Code URL (optional)</label>
+                    <input
+                      type="url"
+                      value={currentProject.githubLink || ""}
+                      placeholder="https://..."
+                      onChange={(e) => setCurrentProject({ ...currentProject, githubLink: e.target.value })}
                       className="w-full px-4 py-3 rounded-xl bg-white/5 border border-white/10 text-white focus:outline-none focus:border-white/30"
                     />
                   </div>
