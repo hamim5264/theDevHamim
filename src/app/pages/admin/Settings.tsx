@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { motion } from "motion/react";
-import { User, Mail, Link as LinkIcon, Globe, Bell, Lock, Database, Palette, Users, Heart } from "lucide-react";
+import { User, Mail, Link as LinkIcon, Globe, Bell, Lock, Database, Palette, Users, Heart, Brain, Eye, EyeOff } from "lucide-react";
 import { usePortfolio } from "../../context/PortfolioContext";
 
 export function AdminSettings() {
@@ -8,6 +8,7 @@ export function AdminSettings() {
   
   // Local state for editing
   const [formData, setFormData] = useState({ ...personalInfo });
+  const [showApiKey, setShowApiKey] = useState(false);
 
   // Sync state if backend data updates
   useEffect(() => {
@@ -298,6 +299,46 @@ export function AdminSettings() {
                   className="w-full px-4 py-3 rounded-lg bg-white/5 border border-white/10 text-white focus:outline-none focus:border-white/30 transition-colors"
                 />
               </div>
+            </div>
+          </div>
+        </motion.div>
+
+        {/* AI Integrations */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.28 }}
+          className="p-6 rounded-xl bg-white/5 border border-white/10"
+        >
+          <div className="flex items-center gap-3 mb-6">
+            <div className="p-2 rounded-lg bg-purple-500/10">
+              <Brain className="w-5 h-5 text-purple-400" />
+            </div>
+            <h2 className="text-xl font-bold">AI Integrations</h2>
+          </div>
+
+          <div className="space-y-4">
+            <div>
+              <label className="block text-sm text-gray-400 mb-2">Gemini API Key</label>
+              <div className="relative">
+                <input
+                  type={showApiKey ? "text" : "password"}
+                  value={formData.geminiApiKey || ""}
+                  onChange={(e) => setFormData({ ...formData, geminiApiKey: e.target.value })}
+                  placeholder="AQ..."
+                  className="w-full pl-4 pr-12 py-3 rounded-lg bg-white/5 border border-white/10 text-white focus:outline-none focus:border-white/30 transition-colors"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowApiKey(!showApiKey)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-white transition-colors"
+                >
+                  {showApiKey ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                </button>
+              </div>
+              <p className="text-xs text-gray-500 mt-2">
+                This API key powers Leo AI Assistant to answer any question using advanced intelligence.
+              </p>
             </div>
           </div>
         </motion.div>

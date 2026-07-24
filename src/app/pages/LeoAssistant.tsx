@@ -14,7 +14,7 @@ function parseInlineStyles(text: string) {
   return segments.map((seg, idx) => {
     if (seg.startsWith('**') && seg.endsWith('**')) {
       return (
-        <strong key={idx} className="font-extrabold text-white">
+        <strong key={idx} className="font-bold text-purple-400">
           {seg.slice(2, -2)}
         </strong>
       );
@@ -72,13 +72,13 @@ function FormattedMessage({ content }: { content: string }) {
 }
 
 export function LeoAssistant() {
-  const { personalInfo, projects } = usePortfolio();
+  const { personalInfo, projects, skills, timelineEvents } = usePortfolio();
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   const [messages, setMessages] = useState<Array<{ role: 'user' | 'assistant', content: string }>>([
     {
       role: 'assistant',
-      content: `Hi, I'm Leo! 🤖 I know absolutely everything about Hamim's software engineering background, B.Sc. studies at Daffodil International University, Ostad Flutter training, professional projects, family info, and career journey. Ask me anything!\n\nTry asking me:\n• Tell me about Hamim's background & hometown\n• What projects has he built and what is their status?\n• What are his technical skills & specialties?\n• Who are his family members & sisters?\n• How can I contact or hire him?`
+      content: `Hey! I'm Leo, Hamim's AI assistant.\n\nI know all about Hamim's apps, career milestones, and tech stack. Ask me anything, or just say hello!`
     }
   ]);
   const [input, setInput] = useState("");
@@ -93,7 +93,7 @@ export function LeoAssistant() {
     scrollToBottom();
   }, [messages, isTyping]);
 
-  const handleSend = () => {
+  const handleSend = async () => {
     if (!input.trim()) return;
 
     const userMessage = input.trim();
@@ -101,11 +101,142 @@ export function LeoAssistant() {
     setInput("");
     setIsTyping(true);
 
-    setTimeout(() => {
-      const response = generateResponse(userMessage);
-      setMessages(prev => [...prev, { role: 'assistant', content: response }]);
-      setIsTyping(false);
-    }, 1200);
+    const apiKey = import.meta.env.VITE_GEMINI_API_KEY || personalInfo?.geminiApiKey;
+    console.log("Leo AI - Using API Key:", apiKey ? `${apiKey.substring(0, 6)}...` : "NONE");
+
+    if (apiKey && apiKey.trim() !== "") {
+      try {
+        const systemPrompt = `You are Leo, the dedicated AI assistant of MD. Abdul Hamim (Leon).
+Your goal is to answer questions about Hamim perfectly based on the provided context. If a user asks about anything else (general questions, programming help, creative tasks, date/time queries, etc.), answer it brilliantly and helpfully using your general knowledge, but maintain your persona as Leo (Hamim's AI assistant).
+
+Current Date and Time: ${new Date().toLocaleString()}
+
+Here is the authentic information about Hamim:
+- Full Name: ${personalInfo.fullName}
+- Title: ${personalInfo.title}
+- Philosophy: ${personalInfo.philosophy}
+- Location: ${personalInfo.location}
+- About: ${personalInfo.about}
+- Hometown/Background: Born in Rajshahi, got GPA 5.00 in SSC & HSC, B.Sc. in CSE at Daffodil International University, Ostad Flutter training (96.5/100 score).
+- Contact: Primary Email is ${personalInfo.email === "hello@thedevhamim.com" ? "hamim.leon@gmail.com" : (personalInfo.email || "hamim.leon@gmail.com")}, Academic/DIU Email is ${personalInfo.emailDIU || "hamim15-5264@diu.edu.bd"}, Phone number is ${personalInfo.phone}, WhatsApp is ${personalInfo.whatsapp}, Telegram is ${personalInfo.telegram}, GitHub is ${personalInfo.github}, LinkedIn is ${personalInfo.linkedin}.
+- Family: Father ${personalInfo.fatherName} (${personalInfo.fatherOccupation}), Mother ${personalInfo.motherName}, Sisters: ${personalInfo.sister1Name} (${personalInfo.sister1Edu}) and ${personalInfo.sister2Name} (${personalInfo.sister2Edu}).
+
+Hamim's Career Journey & Workplaces (Timeline):
+${timelineEvents?.map(e => `- [${e.year}] ${e.title} (${e.subtitle || ''}): ${e.description} (Category: ${e.type})`).join('\n') || '- Founder of DevEngine, Captain of Team Systemica Intelligence at Beup Tech Agency'}
+
+Projects Hamim has built:
+${projects.map(p => `- ${p.name} (${p.category}): ${p.description}. Tech: ${p.tech.join(', ')}. Status: ${p.status}. Impact: ${p.impact}.`).join('\n')}
+
+Technical Stack & Skills:
+${skills?.map(s => `- ${s.name} (${s.category}): Level ${s.level}/100`).join('\n') || '- Flutter, Dart, Python, Django, FastAPI, AI/ML, React, Next.js, LangChain, Firebase, PostgreSQL'}
+
+Rules:
+1. Answer based directly on the question. Keep responses concise, perfect, natural, professional, and human-like. Do NOT output large walls of text unless the user specifically asks for it.
+2. If the user greets you (e.g. 'hi', 'hello', 'hey'), greet them back warmly, introduce yourself briefly as Leo (Hamim's assistant), and ask how you can help. Don't dump details or bios unless asked.
+3. Always refer to MD. Abdul Hamim (Leon) in the third person or as "Hamim" or "Leon".
+4. If the question is about Hamim (his career, family, projects, experience, education, or skills), do NOT append the assistant note/footer. But if the question is general, unrelated to Hamim, or completely out-of-context (e.g. general code help, math, date/time, weather), you MUST append this exact polite notice at the very end of your response: "*(Note: As Hamim's personal AI assistant, I'm here to help with general queries, but please feel free to ask me anything about Hamim's experience, projects, or skills!)*"
+5. When recommending sections of the portfolio or contact channels, output standard markdown redirect links to help users navigate:
+   - About Page: [/about](/about)
+   - Career Journey/Timeline: [/journey](/journey)
+   - Projects List: [/projects](/projects)
+   - Skills Universe: [/skills](/skills)
+   - Contact Info: [/contact](/contact)
+   - DevEngine: [devengine.ai](${personalInfo.businessInfo})
+6. Use standard markdown for formatting.`;
+
+        const historySlice = messages.slice(-10);
+        const contents = [
+          ...historySlice.map(m => ({
+            role: m.role === 'user' ? 'user' : 'model',
+            parts: [{ text: m.content }]
+          })),
+          {
+            role: 'user',
+            parts: [{ text: userMessage }]
+          }
+        ];
+
+        // Dynamic fallback models chain
+        const models = [
+          'gemini-2.5-flash',
+          'gemini-3.5-flash-lite',
+          'gemini-3.1-flash-lite',
+          'gemini-2.5-flash-lite'
+        ];
+
+        let data = null;
+        let success = false;
+        let lastError = "";
+
+        for (const model of models) {
+          try {
+            console.log(`Leo AI - Attempting model: ${model}`);
+            const response = await fetch(
+              `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`,
+              {
+                method: 'POST',
+                headers: {
+                  'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                  contents,
+                  systemInstruction: {
+                    parts: [{ text: systemPrompt }]
+                  }
+                })
+              }
+            );
+
+            if (response.status === 429) {
+              console.warn(`Leo AI - Model ${model} rate limited (429). Trying next fallback...`);
+              lastError = "Rate Limit (429)";
+              continue;
+            }
+
+            if (!response.ok) {
+              const errData = await response.json().catch(() => ({}));
+              console.warn(`Leo AI - Model ${model} returned error status: ${response.status}`, errData);
+              lastError = `Status ${response.status}`;
+              continue;
+            }
+
+            data = await response.json();
+            success = true;
+            console.log(`Leo AI - Successfully responded using model: ${model}`);
+            break;
+          } catch (modelErr: any) {
+            console.error(`Leo AI - Model ${model} call failed:`, modelErr);
+            lastError = modelErr.message || String(modelErr);
+          }
+        }
+
+        if (!success) {
+          throw new Error(`All models in fallback chain failed. Last error: ${lastError}`);
+        }
+
+        const generatedText = data?.candidates?.[0]?.content?.parts?.[0]?.text || "I was unable to process that. Please try again.";
+        setMessages(prev => [...prev, { role: 'assistant', content: generatedText }]);
+      } catch (err: any) {
+        console.error("Leo AI - Gemini API call failed:", err);
+        const fallbackResponse = generateResponse(userMessage);
+        let cleanErr = "Gemini API call encountered an issue.";
+        if (err.message && err.message.includes("429")) {
+          cleanErr = "Leo AI is temporarily busy (Free Tier Rate Limit exceeded).";
+        } else if (err.message && err.message.includes("403")) {
+          cleanErr = "Leo AI authentication failed (Invalid API Key).";
+        }
+        setMessages(prev => [...prev, { role: 'assistant', content: `*(${cleanErr} Falling back to local offline mode.)*\n\n${fallbackResponse}` }]);
+      } finally {
+        setIsTyping(false);
+      }
+    } else {
+      console.warn("Leo AI - Gemini API key is missing or empty.");
+      setTimeout(() => {
+        const response = generateResponse(userMessage);
+        setMessages(prev => [...prev, { role: 'assistant', content: `*(Warning: Gemini API Key is missing or empty. Please save it in settings or .env file. Falling back to local offline mode.)*\n\n${response}` }]);
+        setIsTyping(false);
+      }, 1200);
+    }
   };
 
   const generateResponse = (question: string): string => {
@@ -155,7 +286,7 @@ export function LeoAssistant() {
 
     // 2. Project Catalog Matches (Dynamically lists projects from state)
     for (const project of projects) {
-      const pId = project.id.toLowerCase();
+      const pId = String(project.id).toLowerCase();
       const pName = project.name.toLowerCase();
       if (q.includes(pId) || q.includes(pName.split(' ')[0]) || q.includes(pName.split(' ')[1] || "___")) {
         return `Here is the dynamic live information for **${project.name}**:\n\n• **Category:** ${project.category}\n• **Tech Stack:** ${project.tech.join(', ')}\n• **Key Descriptor:** ${project.impact}\n• **Status:** ${project.status === 'Live' ? '🟢 Live Project' : '🛠️ Under Development'}\n• **Last Updated:** ${project.lastUpdated}\n\n*Description:* ${project.description}`;
@@ -283,8 +414,8 @@ export function LeoAssistant() {
                 </div>
                 <div>
                   <h3 className="font-bold text-white text-base tracking-wide uppercase">LEO</h3>
-                  <p className="text-xs text-green-400 flex items-center gap-1">
-                    <Cpu className="w-3 h-3 animate-spin" /> Active & Synced live with Firestore
+                  <p className="text-xs text-purple-400 flex items-center gap-1 font-mono">
+                    <Cpu className="w-3 h-3 animate-pulse" /> Leo v2.5
                   </p>
                 </div>
               </div>
@@ -307,7 +438,16 @@ export function LeoAssistant() {
                         : 'bg-white/5 border border-white/10 shadow-[0_4px_15px_rgba(0,0,0,0.2)]'
                     }`}
                   >
-                    {message.role === 'user' ? (
+                    {i === 0 && message.role === 'assistant' ? (
+                      <div className="space-y-3">
+                        <p className="text-lg font-bold text-purple-400">
+                          Hey! I'm Leo, Hamim's AI assistant.
+                        </p>
+                        <p className="text-sm md:text-base text-gray-300 leading-relaxed">
+                          I know all about Hamim's apps, career milestones, and tech stack. Ask me anything, or just say hello!
+                        </p>
+                      </div>
+                    ) : message.role === 'user' ? (
                       <p className="text-sm md:text-base leading-relaxed tracking-wide">
                         {message.content}
                       </p>

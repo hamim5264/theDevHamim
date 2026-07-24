@@ -58,6 +58,7 @@ export interface PersonalInfo {
   businessInfo: string;
   profilePic: string;
   resumeUrl: string;
+  geminiApiKey?: string;
   // Family Information
   fatherName: string;
   fatherOccupation: string;
@@ -338,6 +339,7 @@ const defaultPersonalInfo: PersonalInfo = {
   businessInfo: "https://devengine-three.vercel.app/",
   profilePic: "/assets/hamim.png",
   resumeUrl: "",
+  geminiApiKey: "",
   // Family Information
   fatherName: "MD. SALIM REZA",
   fatherOccupation: "Business Man (Electric Shop)",
@@ -511,7 +513,17 @@ export function PortfolioProvider({ children }: { children: React.ReactNode }) {
         let dbProjects = data.projects || [];
         
         setProjects(dbProjects);
-        if (data.personalInfo) setPersonalInfo(data.personalInfo);
+        if (data.personalInfo) {
+          const mergedInfo = { ...defaultPersonalInfo };
+          Object.keys(defaultPersonalInfo).forEach((k) => {
+            const key = k as keyof PersonalInfo;
+            const val = data.personalInfo[key];
+            if (val !== undefined && val !== null && String(val).trim() !== "") {
+              (mergedInfo as any)[key] = val;
+            }
+          });
+          setPersonalInfo(mergedInfo);
+        }
         if (data.profileViews !== undefined) setProfileViews(data.profileViews);
         if (data.skills) setSkills(data.skills);
         else setSkills(defaultSkills);
@@ -642,7 +654,7 @@ export function PortfolioProvider({ children }: { children: React.ReactNode }) {
   };
 
   const addTimelineEvent = async (event: TimelineEvent) => {
-    const updated = [...timelineEvents, event];
+    const updated = [event, ...timelineEvents];
     setTimelineEvents(updated);
     try {
       await setDoc(doc(db, "portfolio", "data"), { timelineEvents: updated }, { merge: true });

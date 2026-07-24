@@ -5,6 +5,8 @@ import { Navigation } from "../components/Navigation";
 import { usePortfolio } from "../context/PortfolioContext";
 import resumePdf from "../../../assets/Resume of Hamim_Flutter & AI Developer.pdf";
 import { ProfileImage } from "../components/ProfileImage";
+import Lottie from "lottie-react";
+import leoAnimation from "../../../assets/leo.json";
 
 
 export function Home() {
@@ -290,27 +292,100 @@ export function Home() {
       </section>
 
       {/* CTA Section */}
-      <section className="relative py-32 px-6 bg-white/[0.02]">
-        <div className="max-w-4xl mx-auto text-center">
+      <section className="relative py-32 px-6 overflow-hidden">
+        {/* Glow orb */}
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-purple-500/5 rounded-full blur-[100px] pointer-events-none" />
+
+        <div className="max-w-4xl mx-auto text-center relative z-10">
           <motion.div
             initial={{ opacity: 0, y: 50 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
             transition={{ duration: 0.8 }}
+            className="p-12 md:p-16 rounded-3xl bg-white/[0.02] border border-white/5 backdrop-blur-md relative overflow-hidden"
           >
-            <h2 className="text-5xl md:text-6xl font-bold mb-8 tracking-tight">EXPLORE THE JOURNEY</h2>
-            <p className="text-xl text-gray-400 mb-12 tracking-wide">
-              Dive deeper into the life, work, and vision of a modern AI engineer
+            {/* Corner glows */}
+            <div className="absolute -top-10 -left-10 w-24 h-24 bg-purple-500/10 rounded-full blur-2xl pointer-events-none" />
+            <div className="absolute -bottom-10 -right-10 w-24 h-24 bg-blue-500/10 rounded-full blur-2xl pointer-events-none" />
+
+            <h2 className="text-4xl md:text-6xl font-black mb-6 tracking-tight bg-gradient-to-r from-white via-gray-300 to-purple-400 bg-clip-text text-transparent uppercase">
+              EXPLORE THE JOURNEY
+            </h2>
+            <p className="text-lg md:text-xl text-gray-400 mb-10 max-w-xl mx-auto leading-relaxed">
+              Dive deeper into the projects, professional timeline, skills database, and future vision of a modern AI & full-stack developer.
             </p>
-            <div className="flex flex-wrap gap-4 justify-center">
+            <div className="flex justify-center">
               <Link to="/about">
-                <button className="px-8 py-4 bg-white text-black rounded-lg hover:bg-gray-200 transition-all duration-300 hover:scale-105 font-semibold tracking-wide">
-                  ABOUT LEON
+                <button className="px-10 py-5 bg-white text-black rounded-xl hover:bg-purple-50 hover:shadow-2xl hover:shadow-purple-500/20 transition-all duration-300 font-bold tracking-wider hover:scale-105 inline-flex items-center gap-2">
+                  ABOUT LEON <ArrowRight className="w-5 h-5" />
                 </button>
               </Link>
+            </div>
+          </motion.div>
+        </div>
+      </section>
+
+      {/* Leo AI Section */}
+      <section className="relative py-24 px-6 bg-zinc-950/40 border-t border-white/5 backdrop-blur-md overflow-hidden">
+        {/* Glow behind */}
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] bg-purple-500/10 rounded-full blur-[120px] pointer-events-none" />
+
+        <div className="max-w-6xl mx-auto grid md:grid-cols-2 gap-16 items-center relative z-10">
+          {/* Animated Leo Column (Very Big) */}
+          <motion.div
+            initial={{ opacity: 0, scale: 0.8 }}
+            whileInView={{ opacity: 1, scale: 1 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.8 }}
+            className="flex justify-center items-center md:order-last"
+          >
+            <div className="relative group">
+              {/* Animated glow */}
+              <div className="absolute inset-0 bg-purple-500/15 rounded-full blur-[50px] group-hover:bg-purple-500/25 transition-all duration-500" />
+              <Lottie 
+                animationData={leoAnimation} 
+                loop={true} 
+                className="w-64 h-64 md:w-80 md:h-80 relative z-10 drop-shadow-[0_0_50px_rgba(168,85,247,0.4)]" 
+              />
+            </div>
+          </motion.div>
+
+          {/* Description Column */}
+          <motion.div
+            initial={{ opacity: 0, x: -30 }}
+            whileInView={{ opacity: 1, x: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.8 }}
+            className="space-y-6 text-left"
+          >
+            <span className="px-4 py-1.5 rounded-full bg-purple-500/10 border border-purple-500/20 text-purple-400 text-xs font-mono tracking-widest uppercase font-bold inline-flex items-center gap-1.5">
+              <Brain className="w-3.5 h-3.5 animate-pulse" /> AI Companionship
+            </span>
+            <h2 className="text-3xl md:text-5xl font-black uppercase tracking-tight text-white leading-tight">
+              Meet Leo <br/>
+              <span className="bg-gradient-to-r from-purple-400 to-blue-500 bg-clip-text text-transparent">Your Smart Companion</span>
+            </h2>
+            <p className="text-gray-300 text-lg leading-relaxed">
+              Leo is my dedicated AI assistant powered by Gemini. He is directly synced with my live database and knows absolutely everything about my projects, programming skills, career journey, and work background.
+            </p>
+            <div className="space-y-3 pt-2 text-gray-400">
+              <div className="flex items-center gap-3">
+                <span className="w-2 h-2 rounded-full bg-purple-500 animate-ping" />
+                <span>Ask about coding expertise & frameworks</span>
+              </div>
+              <div className="flex items-center gap-3">
+                <span className="w-2 h-2 rounded-full bg-purple-500 animate-ping" />
+                <span>Explore dynamic details of built projects</span>
+              </div>
+              <div className="flex items-center gap-3">
+                <span className="w-2 h-2 rounded-full bg-purple-500 animate-ping" />
+                <span>Retrieve active channels to contact and hire me</span>
+              </div>
+            </div>
+            <div className="pt-4">
               <Link to="/leo">
-                <button className="px-8 py-4 bg-white/5 border border-white/10 rounded-lg hover:bg-white/10 transition-all duration-300 backdrop-blur-sm font-semibold tracking-wide">
-                  TALK TO LEO AI
+                <button className="px-8 py-4 bg-gradient-to-r from-purple-600 to-blue-500 hover:from-purple-500 hover:to-blue-400 text-white rounded-lg transition-all duration-300 font-semibold tracking-wide shadow-lg shadow-purple-500/20 hover:shadow-purple-500/35 hover:scale-105">
+                  START TALKING TO LEO
                 </button>
               </Link>
             </div>

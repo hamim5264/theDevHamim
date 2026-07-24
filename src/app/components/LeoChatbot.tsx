@@ -1,16 +1,85 @@
 import { useState } from "react";
 import { motion, AnimatePresence } from "motion/react";
-import { MessageCircle, X, Send, Sparkles } from "lucide-react";
+import { X, Send, Sparkles } from "lucide-react";
+import { usePortfolio } from "../context/PortfolioContext";
+import Lottie from "lottie-react";
+import leoAnimation from "../../../assets/leo.json";
+
+// Simple Inline Markdown Parser to render beautiful lists, links, and semibold bolding
+function parseInlineStyles(text: string) {
+  const regex = /(\*\*.*?\*\*|\[.*?\]\(.*?\))/g;
+  const segments = text.split(regex);
+  
+  return segments.map((seg, idx) => {
+    if (seg.startsWith('**') && seg.endsWith('**')) {
+      return (
+        <strong key={idx} className="font-bold text-purple-400">
+          {seg.slice(2, -2)}
+        </strong>
+      );
+    }
+    if (seg.startsWith('[') && seg.includes('](') && seg.endsWith(')')) {
+      const closeBracket = seg.indexOf(']');
+      const label = seg.slice(1, closeBracket);
+      const url = seg.slice(closeBracket + 2, -1);
+      return (
+        <a 
+          key={idx} 
+          href={url} 
+          target="_blank" 
+          rel="noopener noreferrer" 
+          className="text-purple-400 font-bold hover:underline hover:text-purple-300 transition-colors inline-flex items-center gap-1"
+        >
+          {label}
+        </a>
+      );
+    }
+    return seg;
+  });
+}
+
+function FormattedMessage({ content }: { content: string }) {
+  const lines = content.split('\n');
+  return (
+    <div className="space-y-2 text-sm leading-relaxed text-gray-200">
+      {lines.map((line, index) => {
+        const trimmed = line.trim();
+        if (!trimmed) return <div key={index} className="h-1.5" />;
+
+        // Parse bullet points cleanly with professional bullet indentation
+        const isBullet = trimmed.startsWith('•') || trimmed.startsWith('*') || trimmed.startsWith('-');
+        if (isBullet) {
+          const cleanText = trimmed.replace(/^[•*\-]\s*/, '');
+          return (
+            <div key={index} className="flex gap-2 items-start pl-1">
+              <span className="text-purple-400 mt-2 w-1.5 h-1.5 rounded-full bg-purple-400 shrink-0" />
+              <span className="text-gray-300">
+                {parseInlineStyles(cleanText)}
+              </span>
+            </div>
+          );
+        }
+
+        return (
+          <p key={index} className="text-gray-300">
+            {parseInlineStyles(line)}
+          </p>
+        );
+      })}
+    </div>
+  );
+}
 
 export function LeoChatbot() {
+  const { personalInfo, projects, skills, timelineEvents } = usePortfolio();
   const [isOpen, setIsOpen] = useState(false);
   const [messages, setMessages] = useState<Array<{ role: 'user' | 'assistant', content: string }>>([
-    { role: 'assistant', content: "Hi, I'm Leo 👋 Ask me anything about Hamim's journey, projects, experience, or technologies!" }
+    { role: 'assistant', content: "Hey! I'm Leo, Hamim's AI assistant.\n\nAsk me about his projects, skills, or anything else!" }
   ]);
   const [input, setInput] = useState("");
   const [isTyping, setIsTyping] = useState(false);
 
-  const handleSend = () => {
+  const handleSend = async () => {
     if (!input.trim()) return;
 
     const userMessage = input.trim();
@@ -18,12 +87,143 @@ export function LeoChatbot() {
     setInput("");
     setIsTyping(true);
 
-    // Simulate AI response
-    setTimeout(() => {
-      const response = generateResponse(userMessage);
-      setMessages(prev => [...prev, { role: 'assistant', content: response }]);
-      setIsTyping(false);
-    }, 1000);
+    const apiKey = import.meta.env.VITE_GEMINI_API_KEY || personalInfo?.geminiApiKey;
+    console.log("Leo AI Chatbot - Using API Key:", apiKey ? `${apiKey.substring(0, 6)}...` : "NONE");
+
+    if (apiKey && apiKey.trim() !== "") {
+      try {
+        const systemPrompt = `You are Leo, the dedicated AI assistant of MD. Abdul Hamim (Leon).
+Your goal is to answer questions about Hamim perfectly based on the provided context. If a user asks about anything else (general questions, programming help, creative tasks, date/time queries, etc.), answer it brilliantly and helpfully using your general knowledge, but maintain your persona as Leo (Hamim's AI assistant).
+
+Current Date and Time: ${new Date().toLocaleString()}
+
+Here is the authentic information about Hamim:
+- Full Name: ${personalInfo.fullName}
+- Title: ${personalInfo.title}
+- Philosophy: ${personalInfo.philosophy}
+- Location: ${personalInfo.location}
+- About: ${personalInfo.about}
+- Hometown/Background: Born in Rajshahi, got GPA 5.00 in SSC & HSC, B.Sc. in CSE at Daffodil International University, Ostad Flutter training (96.5/100 score).
+- Contact: Primary Email is ${personalInfo.email === "hello@thedevhamim.com" ? "hamim.leon@gmail.com" : (personalInfo.email || "hamim.leon@gmail.com")}, Academic/DIU Email is ${personalInfo.emailDIU || "hamim15-5264@diu.edu.bd"}, Phone number is ${personalInfo.phone}, WhatsApp is ${personalInfo.whatsapp}, Telegram is ${personalInfo.telegram}, GitHub is ${personalInfo.github}, LinkedIn is ${personalInfo.linkedin}.
+- Family: Father ${personalInfo.fatherName} (${personalInfo.fatherOccupation}), Mother ${personalInfo.motherName}, Sisters: ${personalInfo.sister1Name} (${personalInfo.sister1Edu}) and ${personalInfo.sister2Name} (${personalInfo.sister2Edu}).
+
+Hamim's Career Journey & Workplaces (Timeline):
+${timelineEvents?.map(e => `- [${e.year}] ${e.title} (${e.subtitle || ''}): ${e.description} (Category: ${e.type})`).join('\n') || '- Founder of DevEngine, Captain of Team Systemica Intelligence at Beup Tech Agency'}
+
+Projects Hamim has built:
+${projects.map(p => `- ${p.name} (${p.category}): ${p.description}. Tech: ${p.tech.join(', ')}. Status: ${p.status}. Impact: ${p.impact}.`).join('\n')}
+
+Technical Stack & Skills:
+${skills?.map(s => `- ${s.name} (${s.category}): Level ${s.level}/100`).join('\n') || '- Flutter, Dart, Python, Django, FastAPI, AI/ML, React, Next.js, LangChain, Firebase, PostgreSQL'}
+
+Rules:
+1. Answer based directly on the question. Keep responses concise, perfect, natural, professional, and human-like. Do NOT output large walls of text unless the user specifically asks for it.
+2. If the user greets you (e.g. 'hi', 'hello', 'hey'), greet them back warmly, introduce yourself briefly as Leo (Hamim's assistant), and ask how you can help. Don't dump details or bios unless asked.
+3. Always refer to MD. Abdul Hamim (Leon) in the third person or as "Hamim" or "Leon".
+4. If the question is about Hamim (his career, family, projects, experience, education, or skills), do NOT append the assistant note/footer. But if the question is general, unrelated to Hamim, or completely out-of-context (e.g. general code help, math, date/time, weather), you MUST append this exact polite notice at the very end of your response: "*(Note: As Hamim's personal AI assistant, I'm here to help with general queries, but please feel free to ask me anything about Hamim's experience, projects, or skills!)*"
+5. When recommending sections of the portfolio or contact channels, output standard markdown redirect links to help users navigate:
+   - About Page: [/about](/about)
+   - Career Journey/Timeline: [/journey](/journey)
+   - Projects List: [/projects](/projects)
+   - Skills Universe: [/skills](/skills)
+   - Contact Info: [/contact](/contact)
+   - DevEngine: [devengine.ai](${personalInfo.businessInfo})
+6. Use standard markdown for formatting.`;
+
+        // Format history for Gemini (roles: 'user' and 'model')
+        const historySlice = messages.slice(-10);
+        const contents = [
+          ...historySlice.map(m => ({
+            role: m.role === 'user' ? 'user' : 'model',
+            parts: [{ text: m.content }]
+          })),
+          {
+            role: 'user',
+            parts: [{ text: userMessage }]
+          }
+        ];
+
+        // Dynamic fallback models chain
+        const models = [
+          'gemini-2.5-flash',
+          'gemini-3.5-flash-lite',
+          'gemini-3.1-flash-lite',
+          'gemini-2.5-flash-lite'
+        ];
+
+        let data = null;
+        let success = false;
+        let lastError = "";
+
+        for (const model of models) {
+          try {
+            console.log(`Leo AI Chatbot - Attempting model: ${model}`);
+            const response = await fetch(
+              `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`,
+              {
+                method: 'POST',
+                headers: {
+                  'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                  contents,
+                  systemInstruction: {
+                    parts: [{ text: systemPrompt }]
+                  }
+                })
+              }
+            );
+
+            if (response.status === 429) {
+              console.warn(`Leo AI Chatbot - Model ${model} rate limited (429). Trying next fallback...`);
+              lastError = "Rate Limit (429)";
+              continue;
+            }
+
+            if (!response.ok) {
+              const errData = await response.json().catch(() => ({}));
+              console.warn(`Leo AI Chatbot - Model ${model} returned error status: ${response.status}`, errData);
+              lastError = `Status ${response.status}`;
+              continue;
+            }
+
+            data = await response.json();
+            success = true;
+            console.log(`Leo AI Chatbot - Successfully responded using model: ${model}`);
+            break;
+          } catch (modelErr: any) {
+            console.error(`Leo AI Chatbot - Model ${model} call failed:`, modelErr);
+            lastError = modelErr.message || String(modelErr);
+          }
+        }
+
+        if (!success) {
+          throw new Error(`All models in fallback chain failed. Last error: ${lastError}`);
+        }
+
+        const generatedText = data?.candidates?.[0]?.content?.parts?.[0]?.text || "I was unable to process that. Please try again.";
+        setMessages(prev => [...prev, { role: 'assistant', content: generatedText }]);
+      } catch (err: any) {
+        console.error("Leo AI Chatbot - Gemini API call failed:", err);
+        const fallbackResponse = generateResponse(userMessage);
+        let cleanErr = "Gemini API call encountered an issue.";
+        if (err.message && err.message.includes("429")) {
+          cleanErr = "Leo AI is temporarily busy (Free Tier Rate Limit exceeded).";
+        } else if (err.message && err.message.includes("403")) {
+          cleanErr = "Leo AI authentication failed (Invalid API Key).";
+        }
+        setMessages(prev => [...prev, { role: 'assistant', content: `*(${cleanErr} Falling back to local offline mode.)*\n\n${fallbackResponse}` }]);
+      } finally {
+        setIsTyping(false);
+      }
+    } else {
+      console.warn("Leo AI Chatbot - Gemini API key is missing or empty.");
+      setTimeout(() => {
+        const response = generateResponse(userMessage);
+        setMessages(prev => [...prev, { role: 'assistant', content: `*(Warning: Gemini API Key is missing or empty. Please save it in settings or .env file. Falling back to local offline mode.)*\n\n${response}` }]);
+        setIsTyping(false);
+      }, 1000);
+    }
   };
 
   const generateResponse = (question: string): string => {
@@ -77,13 +277,13 @@ export function LeoChatbot() {
               initial={{ rotate: -90, opacity: 0 }}
               animate={{ rotate: 0, opacity: 1 }}
               exit={{ rotate: 90, opacity: 0 }}
-              className="relative"
+              className="relative flex items-center justify-center"
             >
-              <MessageCircle className="w-6 h-6 text-white" />
+              <Lottie animationData={leoAnimation} loop={true} className="w-12 h-12" />
               <motion.div
                 animate={{ scale: [1, 1.2, 1] }}
                 transition={{ duration: 2, repeat: Infinity }}
-                className="absolute -top-1 -right-1 w-3 h-3 bg-green-400 rounded-full"
+                className="absolute top-0 right-0 w-3 h-3 bg-green-400 rounded-full border border-black"
               />
             </motion.div>
           )}
@@ -115,7 +315,7 @@ export function LeoChatbot() {
                 </div>
                 <div>
                   <h3 className="font-bold text-white">Leo</h3>
-                  <p className="text-xs text-gray-400">AI Assistant</p>
+                  <p className="text-xs text-purple-400 font-mono">Leo v2.5</p>
                 </div>
               </div>
             </div>
@@ -136,7 +336,20 @@ export function LeoChatbot() {
                         : 'bg-white/10 text-white border border-white/10'
                     }`}
                   >
-                    <p className="text-sm leading-relaxed">{message.content}</p>
+                    {i === 0 && message.role === 'assistant' ? (
+                      <div className="space-y-2">
+                        <p className="text-base font-bold text-purple-400">
+                          Hey! I'm Leo, Hamim's AI assistant.
+                        </p>
+                        <p className="text-sm text-gray-300 leading-relaxed">
+                          Ask me about his projects, skills, or anything else!
+                        </p>
+                      </div>
+                    ) : message.role === 'user' ? (
+                      <p className="text-sm leading-relaxed">{message.content}</p>
+                    ) : (
+                      <FormattedMessage content={message.content} />
+                    )}
                   </div>
                 </motion.div>
               ))}
