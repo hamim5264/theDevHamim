@@ -1,7 +1,7 @@
 import { Navigation } from "../components/Navigation";
 import { motion, AnimatePresence } from "motion/react";
 import { useParams, Link } from "react-router";
-import { ExternalLink, Github, ArrowLeft, CheckCircle, Info, Star, ShieldAlert } from "lucide-react";
+import { ExternalLink, Github, ArrowLeft, CheckCircle, Info, Star, ShieldAlert, Share2, Check } from "lucide-react";
 import { useState } from "react";
 import { usePortfolio } from "../context/PortfolioContext";
 
@@ -337,7 +337,14 @@ export function ProjectDetail() {
   const { projects } = usePortfolio();
   const dbProject = projects.find(p => String(p.id) === String(projectId));
 
-  const project = projectData[projectId || ""] || (dbProject ? {
+  const project = projectData[projectId || ""] ? {
+    ...projectData[projectId || ""],
+    ...(dbProject ? {
+      liveLink: dbProject.liveLink || projectData[projectId || ""].liveLink,
+      playstoreLink: dbProject.playstoreLink || projectData[projectId || ""].playstoreLink,
+      githubLink: dbProject.githubLink || projectData[projectId || ""].githubLink,
+    } : {})
+  } : (dbProject ? {
     name: dbProject.name,
     tagline: dbProject.category,
     description: dbProject.description,
@@ -347,6 +354,7 @@ export function ProjectDetail() {
     metrics: ["Highly Secure Systems", "Robust Architecture", "Excellent Performance"],
     status: dbProject.status || "Active",
     liveLink: dbProject.liveLink || "",
+    playstoreLink: dbProject.playstoreLink || "",
     githubLink: dbProject.githubLink || ""
   } : null) || {
     name: "PROJECT SPECIFICATION",
@@ -357,6 +365,27 @@ export function ProjectDetail() {
     impact: "Mobile/Web App",
     metrics: ["Highly Secure Systems", "Robust Architecture", "Excellent Performance"],
     status: "Active"
+  };
+
+  const [copiedShare, setCopiedShare] = useState(false);
+
+  const handleShare = async () => {
+    const shareUrl = window.location.href;
+    if (navigator.share) {
+      try {
+        await navigator.share({
+          title: project.name,
+          text: `Check out ${project.name} on MD. ABDUL HAMIM's Portfolio!`,
+          url: shareUrl,
+        });
+        return;
+      } catch (e) {
+        // Fallback to clipboard
+      }
+    }
+    navigator.clipboard.writeText(shareUrl);
+    setCopiedShare(true);
+    setTimeout(() => setCopiedShare(false), 2500);
   };
 
   return (
@@ -400,7 +429,17 @@ export function ProjectDetail() {
             <p className="text-2xl text-gray-400 mb-12 tracking-wide leading-relaxed max-w-4xl">
               {project.tagline}
             </p>
-            <div className="flex flex-wrap gap-4">
+            <div className="flex flex-wrap gap-4 items-center">
+              {project.playstoreLink && project.playstoreLink.startsWith("http") && (
+                <button 
+                  onClick={() => window.open(project.playstoreLink, "_blank", "noopener,noreferrer")}
+                  className="px-8 py-4 bg-white hover:bg-gray-200 text-black font-bold rounded-lg transition-all duration-300 hover:scale-105 tracking-wide flex items-center gap-3 cursor-pointer shadow-xl shadow-white/10"
+                >
+                  <img src="/assets/paly.png" alt="PlayStore" className="w-6 h-6 object-contain" />
+                  DOWNLOAD NOW
+                </button>
+              )}
+
               <button 
                 onClick={() => {
                   if (project.liveLink && project.liveLink.startsWith("http")) {
@@ -409,23 +448,49 @@ export function ProjectDetail() {
                     setShowAlert(true);
                   }
                 }}
-                className="px-8 py-4 bg-white text-black hover:bg-gray-200 rounded-lg transition-all duration-300 hover:scale-105 font-semibold tracking-wide flex items-center gap-2 cursor-pointer"
+                className={`px-8 py-4 rounded-lg transition-all duration-300 hover:scale-105 font-semibold tracking-wide flex items-center gap-2 cursor-pointer ${
+                  project.liveLink && project.liveLink.startsWith("http") && (!project.playstoreLink || !project.playstoreLink.startsWith("http"))
+                    ? "bg-white text-black hover:bg-gray-200"
+                    : "bg-white/5 border border-white/10 text-gray-300 hover:bg-white/10"
+                }`}
               >
-                <ExternalLink className="w-5 h-5" />
+                <ExternalLink className="w-5 h-5 text-blue-400" />
                 LIVE DEMO
               </button>
-              <button 
-                onClick={() => {
-                  if (project.githubLink && project.githubLink.startsWith("http")) {
-                    window.open(project.githubLink, "_blank", "noopener,noreferrer");
-                  } else {
-                    setShowAlert(true);
-                  }
-                }}
-                className="px-8 py-4 bg-white/5 border border-white/10 rounded-lg hover:bg-white/10 transition-all duration-300 backdrop-blur-sm font-semibold tracking-wide flex items-center gap-2 cursor-pointer"
+
+              {(!project.playstoreLink || !project.playstoreLink.startsWith("http")) && (
+                <button 
+                  onClick={() => {
+                    if (project.githubLink && project.githubLink.startsWith("http")) {
+                      window.open(project.githubLink, "_blank", "noopener,noreferrer");
+                    } else {
+                      setShowAlert(true);
+                    }
+                  }}
+                  className="px-8 py-4 bg-white/5 border border-white/10 rounded-lg hover:bg-white/10 transition-all duration-300 backdrop-blur-sm font-semibold tracking-wide flex items-center gap-2 cursor-pointer"
+                >
+                  <Github className="w-5 h-5 text-purple-400" />
+                  VIEW CODE
+                </button>
+              )}
+
+              {/* Share Deep Link Button */}
+              <button
+                onClick={handleShare}
+                className="px-6 py-4 bg-white/5 border border-white/10 hover:bg-white/10 text-gray-300 hover:text-white rounded-lg transition-all duration-300 backdrop-blur-sm font-semibold tracking-wide flex items-center gap-2 cursor-pointer"
+                title="Share Deep Link"
               >
-                <Github className="w-5 h-5" />
-                VIEW CODE
+                {copiedShare ? (
+                  <>
+                    <Check className="w-5 h-5 text-green-400" />
+                    <span className="text-green-400">LINK COPIED!</span>
+                  </>
+                ) : (
+                  <>
+                    <Share2 className="w-5 h-5 text-cyan-400" />
+                    SHARE
+                  </>
+                )}
               </button>
             </div>
           </motion.div>

@@ -22,10 +22,10 @@ export function About() {
             transition={{ duration: 0.8 }}
           >
             <h1 className="text-5xl md:text-7xl font-bold mb-8 tracking-tight">
-              ABOUT {personalInfo.lastName.toUpperCase()}
+              ABOUT {personalInfo.lastName ? personalInfo.lastName.toUpperCase() : "HAMIM"}
             </h1>
             <p className="text-xl md:text-2xl text-gray-400 leading-relaxed tracking-wide max-w-4xl mx-auto">
-              More than just code. A story of passion, structural engineering, machine intelligence, and an unwavering belief in building things that solve real-world problems.
+              {personalInfo.about || "More than just code. A story of passion, structural engineering, machine intelligence, and an unwavering belief in building things that solve real-world problems."}
             </p>
           </motion.div>
         </div>
@@ -44,12 +44,18 @@ export function About() {
             <Heart className="w-16 h-16 mb-8 text-white" />
             <h2 className="text-3xl md:text-4xl font-bold mb-6 tracking-tight">THE BEGINNING</h2>
             <div className="space-y-6 text-lg text-gray-300 leading-relaxed tracking-wide">
-              <p>
-                Born as <strong className="text-white">{personalInfo.fullName}</strong> (Blood Group: <strong className="text-white">A+</strong>), I grew up in Rajshahi and later moved to Dhaka for my graduation. My journey in computing was born from pure curiosity. Supported deeply by my family—my father, {personalInfo.fatherName}, and my mother, {personalInfo.motherName}—I learned that education and focus are the keys to unlocking infinite possibilities.
-              </p>
-              <p>
-                From my early schooling to securing a perfect <strong className="text-white">GPA 5.00 out of 5.00</strong> in my SSC and HSC studies under the Rajshahi Board, I developed a strong scientific foundation and a passion for engineering.
-              </p>
+              {personalInfo.aboutBeginning ? (
+                <p>{personalInfo.aboutBeginning}</p>
+              ) : (
+                <>
+                  <p>
+                    Born as <strong className="text-white">{personalInfo.fullName}</strong> (Blood Group: <strong className="text-white">{personalInfo.bloodGroup || "A+"}</strong>), I grew up in Rajshahi and later moved to Dhaka for my graduation. My journey in computing was born from pure curiosity. Supported deeply by my family—my father, {personalInfo.fatherName}, and my mother, {personalInfo.motherName}—I learned that education and focus are the keys to unlocking infinite possibilities.
+                  </p>
+                  <p>
+                    From my early schooling to securing a perfect <strong className="text-white">GPA 5.00 out of 5.00</strong> in my SSC and HSC studies under the Rajshahi Board, I developed a strong scientific foundation and a passion for engineering.
+                  </p>
+                </>
+              )}
             </div>
           </motion.div>
 
@@ -64,12 +70,18 @@ export function About() {
             <Lightbulb className="w-16 h-16 mb-8 text-white" />
             <h2 className="text-3xl md:text-4xl font-bold mb-6 tracking-tight">THE AWAKENING</h2>
             <div className="space-y-6 text-lg text-gray-300 leading-relaxed tracking-wide">
-              <p>
-                My programming journey truly started when I wrote my first script. The ability to create dynamic user interfaces sparked a drive to build scalable software.
-              </p>
-              <p>
-                I pursued my passion formally by joining <strong className="text-white">Daffodil International University</strong> for my B.Sc. in Computer Science & Engineering. Combining my academic studies with intense technical research allowed me to transition into AI automation and advanced Flutter app architecture.
-              </p>
+              {personalInfo.aboutAwakening ? (
+                <p>{personalInfo.aboutAwakening}</p>
+              ) : (
+                <>
+                  <p>
+                    My programming journey truly started when I wrote my first script. The ability to create dynamic user interfaces sparked a drive to build scalable software.
+                  </p>
+                  <p>
+                    I pursued my passion formally by joining <strong className="text-white">Daffodil International University</strong> for my B.Sc. in Computer Science & Engineering. Combining my academic studies with intense technical research allowed me to transition into AI automation and advanced Flutter app architecture.
+                  </p>
+                </>
+              )}
             </div>
           </motion.div>
 
@@ -84,12 +96,18 @@ export function About() {
             <Zap className="w-16 h-16 mb-8 text-white" />
             <h2 className="text-3xl md:text-4xl font-bold mb-6 tracking-tight">THE STRUGGLE & TRAINING</h2>
             <div className="space-y-6 text-lg text-gray-300 leading-relaxed tracking-wide">
-              <p>
-                Transitioning from theoretical computer science to engineering production-grade software required relentless dedication. To sharpen my skills, I completed an intensive Flutter training program at <strong className="text-white">Ostad</strong>, graduating in the Pro Batch with a stellar <strong className="text-white">96.5/100</strong> score.
-              </p>
-              <p>
-                Building solutions like AI agents, sports analytics platforms, and payment-integrated travel systems taught me how to tackle bugs, design modular clean architecture (Riverpod, Provider, Clean Architecture), and optimize live servers.
-              </p>
+              {personalInfo.aboutStruggle ? (
+                <p>{personalInfo.aboutStruggle}</p>
+              ) : (
+                <>
+                  <p>
+                    Transitioning from theoretical computer science to engineering production-grade software required relentless dedication. To sharpen my skills, I completed an intensive Flutter training program at <strong className="text-white">Ostad</strong>, graduating in the Pro Batch with a stellar <strong className="text-white">96.5/100</strong> score.
+                  </p>
+                  <p>
+                    Building solutions like AI agents, sports analytics platforms, and payment-integrated travel systems taught me how to tackle bugs, design modular clean architecture (Riverpod, Provider, Clean Architecture), and optimize live servers.
+                  </p>
+                </>
+              )}
             </div>
           </motion.div>
 
@@ -104,12 +122,18 @@ export function About() {
             <Trophy className="w-16 h-16 mb-8 text-white" />
             <h2 className="text-3xl md:text-4xl font-bold mb-6 tracking-tight">THE BREAKTHROUGH & LEADERSHIP</h2>
             <div className="space-y-6 text-lg text-gray-300 leading-relaxed tracking-wide">
-              <p>
-                My breakthrough occurred when I joined <strong className="text-white">Beup Tech Agency</strong> (A Concern of Betopia Group) as a Junior Flutter Developer and was appointed as the <strong className="text-white">Captain of Team Systemica Intelligence</strong>.
-              </p>
-              <p>
-                Leading teams, architecting secure API structures, integrating Firebase and Stripe databases, and scaling microservice products like <strong className="text-white">Kick360</strong>, <strong className="text-white">Qari 24/7</strong>, and <strong className="text-white">Epic NZ Travel</strong> turned my vision into production reality.
-              </p>
+              {personalInfo.aboutBreakthrough ? (
+                <p>{personalInfo.aboutBreakthrough}</p>
+              ) : (
+                <>
+                  <p>
+                    My breakthrough occurred when I joined <strong className="text-white">Beup Tech Agency</strong> (A Concern of Betopia Group) as a Junior Flutter Developer and was appointed as the <strong className="text-white">Captain of Team Systemica Intelligence</strong>.
+                  </p>
+                  <p>
+                    Leading teams, architecting secure API structures, integrating Firebase and Stripe databases, and scaling microservice products like <strong className="text-white">Kick360</strong>, <strong className="text-white">Qari 24/7</strong>, and <strong className="text-white">Epic NZ Travel</strong> turned my vision into production reality.
+                  </p>
+                </>
+              )}
             </div>
           </motion.div>
 
@@ -124,12 +148,18 @@ export function About() {
             <BookOpen className="w-16 h-16 mb-8 text-white" />
             <h2 className="text-3xl md:text-4xl font-bold mb-6 tracking-tight">THE MINDSET</h2>
             <div className="space-y-6 text-lg text-gray-300 leading-relaxed tracking-wide">
-              <p>
-                I believe code is not just instructions for machines, but a medium to solve human problems. My philosophy is clear: <strong className="text-white">"{personalInfo.philosophy}"</strong>
-              </p>
-              <p>
-                Whether it is optimizing a live stream pipeline or embedding LLMs like GPT-4 via LangChain for intelligent CRM booking, I architect systems to be clean, modular, and extremely scalable.
-              </p>
+              {personalInfo.aboutMindset ? (
+                <p>{personalInfo.aboutMindset}</p>
+              ) : (
+                <>
+                  <p>
+                    I believe code is not just instructions for machines, but a medium to solve human problems. My philosophy is clear: <strong className="text-white">"{personalInfo.philosophy}"</strong>
+                  </p>
+                  <p>
+                    Whether it is optimizing a live stream pipeline or embedding LLMs like GPT-4 via LangChain for intelligent CRM booking, I architect systems to be clean, modular, and extremely scalable.
+                  </p>
+                </>
+              )}
             </div>
           </motion.div>
 

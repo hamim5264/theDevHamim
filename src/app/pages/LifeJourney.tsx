@@ -1,7 +1,7 @@
 import { Navigation } from "../components/Navigation";
 import { motion } from "motion/react";
 import { Briefcase, GraduationCap, Award, BookOpen, Star, Zap } from "lucide-react";
-import { usePortfolio } from "../context/PortfolioContext";
+import { usePortfolio, calculateDuration } from "../context/PortfolioContext";
 
 export function LifeJourney() {
   const { personalInfo, timelineEvents } = usePortfolio();
@@ -19,6 +19,7 @@ export function LifeJourney() {
   const getEventColor = (type: string) => {
     switch (type) {
       case "work": return "blue";
+      case "family_business": return "orange";
       case "edu": return "green";
       case "cert": return "orange";
       case "hobby": return "pink";
@@ -76,9 +77,14 @@ export function LifeJourney() {
                 {/* Event Card */}
                 <div className="p-8 rounded-2xl bg-white/5 border border-white/10 hover:bg-white/10 hover:border-white/20 transition-all duration-300 group">
                   <div className="flex flex-wrap items-center justify-between gap-4 mb-4">
-                    <span className="text-xl font-mono text-gray-400 font-bold tracking-wider">{event.year}</span>
+                    <div className="flex items-center gap-3">
+                      <span className="text-xl font-mono text-gray-400 font-bold tracking-wider">{event.year}</span>
+                      <span className="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-purple-500/20 text-purple-300 border border-purple-500/30">
+                        {calculateDuration(event)}
+                      </span>
+                    </div>
                     <span className="px-3 py-1 rounded-full text-xs font-semibold uppercase tracking-widest bg-white/5 border border-white/10 text-gray-300">
-                      {event.type}
+                      {event.type.replace('_', ' ')}
                     </span>
                   </div>
                   <h3 className="text-2xl md:text-3xl font-bold mb-2 tracking-wide text-white group-hover:text-gray-200 transition-colors">

@@ -1,45 +1,21 @@
 import { Navigation } from "../components/Navigation";
 import { motion } from "motion/react";
-import { Home, Users, Heart, GraduationCap, Briefcase, MapPin } from "lucide-react";
+import { Home, Users, Heart, GraduationCap, Briefcase, MapPin, User, Star, Award } from "lucide-react";
 import { usePortfolio } from "../context/PortfolioContext";
 
 export function PersonalLife() {
-  const { personalInfo } = usePortfolio();
+  const { personalInfo, familyMembers } = usePortfolio();
 
-  const familyMembers = [
-    {
-      relation: "Father",
-      name: personalInfo.fatherName,
-      occupation: personalInfo.fatherOccupation,
-      details: "An inspiring business leader who runs our family electronics store. Teaches me daily operational discipline, work ethics, and the engineering behind electronic logic systems.",
-      mobile: personalInfo.fatherMobile,
-      icon: Briefcase
-    },
-    {
-      relation: "Mother",
-      name: personalInfo.motherName,
-      occupation: personalInfo.motherOccupation,
-      details: "The emotional foundation and heart of our family. Supports all my creative software endeavors and teaches me resilience, empathy, and patience.",
-      mobile: personalInfo.motherMobile,
-      icon: Heart
-    },
-    {
-      relation: "Elder Sister 1",
-      name: personalInfo.sister1Name,
-      occupation: "Master of Science (M.Sc.) – Entomology",
-      details: "Rajshahi College, National University (Passing Year: 2013 | First Class). Instilled in me early scientific curiosity, database organization, and strict research practices.",
-      edu: personalInfo.sister1Edu,
-      icon: GraduationCap
-    },
-    {
-      relation: "Elder Sister 2",
-      name: personalInfo.sister2Name,
-      occupation: "Masters of Social Science",
-      details: "Rajshahi New Govt. Degree College, Rajshahi (Passing Year: 2019). Guided my social skills, project management, and public communication strategy.",
-      edu: personalInfo.sister2Edu,
-      icon: GraduationCap
+  const getFamilyIcon = (iconName = "") => {
+    switch (iconName.toLowerCase()) {
+      case "heart": return Heart;
+      case "briefcase": return Briefcase;
+      case "graduation": return GraduationCap;
+      case "star": return Star;
+      case "user": return User;
+      default: return User;
     }
-  ];
+  };
 
   return (
     <div className="min-h-screen bg-black text-white overflow-hidden">
@@ -76,10 +52,10 @@ export function PersonalLife() {
 
           <div className="grid md:grid-cols-2 gap-8 mb-20">
             {familyMembers.map((member, i) => {
-              const Icon = member.icon;
+              const Icon = getFamilyIcon(member.iconName);
               return (
                 <motion.div
-                  key={i}
+                  key={member.id || i}
                   initial={{ opacity: 0, y: 30 }}
                   whileInView={{ opacity: 1, y: 0 }}
                   viewport={{ once: true }}
@@ -99,6 +75,11 @@ export function PersonalLife() {
                   <p className="text-gray-300 leading-relaxed text-base tracking-wide">
                     {member.details}
                   </p>
+                  {member.edu && (
+                    <p className="text-sm text-purple-300/80 font-mono mt-4 pt-4 border-t border-white/10">
+                      🎓 {member.edu}
+                    </p>
+                  )}
                 </motion.div>
               );
             })}
@@ -158,10 +139,10 @@ export function PersonalLife() {
 
           <div className="grid grid-cols-2 md:grid-cols-4 gap-6 mb-20">
             {[
-              { label: "BLOOD GROUP", value: "A+" },
-              { label: "DATE OF BIRTH", value: "November 10, 2002" },
-              { label: "NATIONALITY", value: "Bangladeshi" },
-              { label: "NID NUMBER", value: "6010606058" },
+              { label: "BLOOD GROUP", value: personalInfo.bloodGroup || "A+" },
+              { label: "DATE OF BIRTH", value: personalInfo.dob || "November 10, 2002" },
+              { label: "NATIONALITY", value: personalInfo.nationality || "Bangladeshi" },
+              { label: "NID NUMBER", value: personalInfo.nid || "6010606058" },
             ].map((item, idx) => (
               <motion.div
                 key={idx}

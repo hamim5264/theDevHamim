@@ -1,31 +1,22 @@
 import { Navigation } from "../components/Navigation";
 import { motion } from "motion/react";
-import { Compass, Cpu, Smartphone, Award, Lightbulb } from "lucide-react";
+import { Compass, Cpu, Smartphone, Award, Lightbulb, Star, Rocket } from "lucide-react";
+import { usePortfolio } from "../context/PortfolioContext";
 
 export function Vision() {
-  const pillars = [
-    {
-      title: "INTELLIGENT AI AGENTS",
-      subtitle: "Autonomous Operations",
-      desc: "Architecting autonomous AI agent networks (using tools like LangChain, ChromaDB, FastAPI, and OpenAI) that transition static CRM and customer support structures into responsive conversational networks.",
-      icon: Cpu,
-      color: "purple"
-    },
-    {
-      title: "CLEAN MOBILE ECOSYSTEMS",
-      subtitle: "Scalable Flutter Systems",
-      desc: "Pioneering highly modular state management frameworks (Riverpod, Bloc) and clean architecture strategies inside cross-platform Flutter platforms to secure high-performance, live application deployments.",
-      icon: Smartphone,
-      color: "blue"
-    },
-    {
-      title: "HUMANITARIAN TECHNOLOGY",
-      subtitle: "Purpose-Driven Design",
-      desc: "Remaining anchored to the engineering belief that 'Technology should serve humanity, not the other way around.' Building high-impact structures like Qari 24/7 and Khazna to simplify learning and tracking.",
-      icon: Lightbulb,
-      color: "pink"
+  const { personalInfo, visionPillars } = usePortfolio();
+
+  const getPillarIcon = (iconName = "") => {
+    switch (iconName.toLowerCase()) {
+      case "cpu": return Cpu;
+      case "smartphone": return Smartphone;
+      case "lightbulb": return Lightbulb;
+      case "compass": return Compass;
+      case "rocket": return Rocket;
+      case "star": return Star;
+      default: return Cpu;
     }
-  ];
+  };
 
   return (
     <div className="min-h-screen bg-black text-white overflow-hidden">
@@ -49,11 +40,11 @@ export function Vision() {
             <h1 className="text-5xl md:text-7xl font-bold mb-8 tracking-tight uppercase leading-none">
               FUTURE VISION & PHILOSOPHY
             </h1>
-            <blockquote className="text-2xl md:text-3xl font-bold mb-6 max-w-4xl mx-auto leading-relaxed tracking-wide bg-gradient-to-r from-white via-gray-300 to-gray-600 bg-clip-text text-transparent">
-              "THE FUTURE ISN'T SOMETHING WE ENTER. THE FUTURE IS SOMETHING WE CREATE."
+            <blockquote className="text-2xl md:text-3xl font-bold mb-6 max-w-4xl mx-auto leading-relaxed tracking-wide bg-gradient-to-r from-white via-gray-300 to-gray-600 bg-clip-text text-transparent uppercase">
+              "{personalInfo.philosophy || "THE FUTURE ISN'T SOMETHING WE ENTER. THE FUTURE IS SOMETHING WE CREATE."}"
             </blockquote>
             <p className="text-xl md:text-2xl text-purple-400 font-mono tracking-wider uppercase mb-8">
-              My ultimate ambition is to become one of the greatest software engineers of our generation.
+              {personalInfo.visionSubtitle || "My ultimate ambition is to become one of the greatest software engineers of our generation."}
             </p>
           </motion.div>
         </div>
@@ -63,18 +54,23 @@ export function Vision() {
       <section className="relative py-20 px-6">
         <div className="max-w-5xl mx-auto">
           <div className="space-y-12">
-            {pillars.map((pillar, i) => {
-              const Icon = pillar.icon;
+            {visionPillars.map((pillar, i) => {
+              const Icon = getPillarIcon(pillar.iconName);
+              const colorClass = pillar.color === 'orange' ? 'text-amber-400 bg-amber-500/10' :
+                                 pillar.color === 'blue' ? 'text-blue-400 bg-blue-500/10' :
+                                 pillar.color === 'pink' ? 'text-pink-400 bg-pink-500/10' :
+                                 pillar.color === 'green' ? 'text-emerald-400 bg-emerald-500/10' :
+                                 'text-purple-400 bg-purple-500/10';
               return (
                 <motion.div
-                  key={i}
+                  key={pillar.id || i}
                   initial={{ opacity: 0, y: 40 }}
                   whileInView={{ opacity: 1, y: 0 }}
                   viewport={{ once: true }}
                   transition={{ delay: i * 0.1, duration: 0.8 }}
                   className="p-10 rounded-3xl bg-white/5 border border-white/10 hover:bg-white/10 hover:border-white/20 transition-all duration-300 backdrop-blur-sm flex flex-col md:flex-row gap-8 items-start group"
                 >
-                  <div className={`p-5 rounded-2xl bg-${pillar.color}-500/10 text-${pillar.color === 'orange' ? 'amber' : pillar.color}-400 group-hover:scale-110 transition-transform flex-shrink-0`}>
+                  <div className={`p-5 rounded-2xl ${colorClass} group-hover:scale-110 transition-transform flex-shrink-0`}>
                     <Icon className="w-8 h-8" />
                   </div>
                   <div>

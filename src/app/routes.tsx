@@ -16,7 +16,9 @@ import { AdminDashboard } from "./pages/admin/Dashboard";
 import { AdminProjects } from "./pages/admin/Projects";
 import { AdminSkills } from "./pages/admin/Skills";
 import { AdminTimeline } from "./pages/admin/Timeline";
+import { AdminAchievements } from "./pages/admin/Achievements";
 import { AdminMedia } from "./pages/admin/Media";
+import { AdminAboutVision } from "./pages/admin/AboutVision";
 import { AdminSettings } from "./pages/admin/Settings";
 import { AdminLogin } from "./pages/admin/Login";
 
@@ -78,6 +80,8 @@ export const router = createBrowserRouter([
       { path: "projects", Component: AdminProjects },
       { path: "skills", Component: AdminSkills },
       { path: "timeline", Component: AdminTimeline },
+      { path: "achievements", Component: AdminAchievements },
+      { path: "about-vision", Component: AdminAboutVision },
       { path: "media", Component: AdminMedia },
       { path: "settings", Component: AdminSettings },
     ],

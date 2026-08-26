@@ -375,7 +375,7 @@ export function AdminProjects() {
                   </div>
                 </div>
 
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-3 gap-4">
                   <div>
                     <label className="block text-sm text-gray-400 mb-2">Live Demo URL (optional)</label>
                     <input
@@ -384,6 +384,16 @@ export function AdminProjects() {
                       placeholder="https://..."
                       onChange={(e) => setCurrentProject({ ...currentProject, liveLink: e.target.value })}
                       className="w-full px-4 py-3 rounded-xl bg-white/5 border border-white/10 text-white focus:outline-none focus:border-white/30"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm text-gray-400 mb-2">PlayStore URL (optional)</label>
+                    <input
+                      type="url"
+                      value={currentProject.playstoreLink || ""}
+                      placeholder="https://play.google.com/..."
+                      onChange={(e) => setCurrentProject({ ...currentProject, playstoreLink: e.target.value })}
+                      className="w-full px-4 py-3 rounded-xl bg-white/5 border border-white/10 text-white focus:outline-none focus:border-white/30 text-xs"
                     />
                   </div>
                   <div>

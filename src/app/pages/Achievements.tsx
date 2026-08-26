@@ -1,45 +1,23 @@
 import { Navigation } from "../components/Navigation";
 import { motion } from "motion/react";
-import { Award, ShieldAlert, Cpu, Rocket, BookOpen, Star } from "lucide-react";
+import { Award, ShieldAlert, Cpu, Rocket, BookOpen, Star, Trophy, Shield, Zap } from "lucide-react";
+import { usePortfolio } from "../context/PortfolioContext";
 
 export function Achievements() {
-  const achievements = [
-    {
-      title: "PRODUCTION APPLICATION DEPLOYMENT",
-      category: "Mobile & Web Software",
-      desc: "Built, optimized, and successfully deployed production-ready applications across multiple sectors including AI, EdTech (Qari 24/7), SaaS, automation (CRM Calling), and eCommerce (Kick360).",
-      icon: Rocket,
-      color: "blue"
-    },
-    {
-      title: "TEAM LEADERSHIP & CAPTAINCY",
-      category: "Team Systemica Intelligence",
-      desc: "Led complex software development operations as the Team Captain of Systemica Intelligence at Beup Tech Agency, coordinating agile workflows, modular clean architectures, and strict code review structures.",
-      icon: Star,
-      color: "purple"
-    },
-    {
-      title: "ACADEMIC EXCELLENCE (PERFECT GPA)",
-      category: "Rajshahi Board Excellence",
-      desc: "Secured perfect academic credentials with a perfect score of GPA 5.00 out of 5.00 (Golden) in both SSC and HSC (Science) studies under the Rajshahi Board.",
-      icon: BookOpen,
-      color: "green"
-    },
-    {
-      title: "PROFESSIONAL FLUTTER CERTIFICATION",
-      category: "Ostad Training Academy",
-      desc: "Completed 12-month professional mobile engineering training, graduating in the Pro Batch with a spectacular final evaluation score of 96.5 out of 100.",
-      icon: Award,
-      color: "orange"
-    },
-    {
-      title: "AI & AUTOMATION INTEGRATION",
-      category: "Advanced Technology",
-      desc: "Successfully integrated advanced Large Language Model (LLM) agents, vector databases (ChromaDB), calling automations, and AI personalized tutors into functional commercial SaaS products.",
-      icon: Cpu,
-      color: "pink"
+  const { achievements } = usePortfolio();
+
+  const getAchievementIcon = (iconName = "") => {
+    switch (iconName.toLowerCase()) {
+      case "rocket": return Rocket;
+      case "star": return Star;
+      case "book": return BookOpen;
+      case "award": return Award;
+      case "cpu": return Cpu;
+      case "trophy": return Trophy;
+      case "shield": return Shield;
+      default: return Award;
     }
-  ];
+  };
 
   return (
     <div className="min-h-screen bg-black text-white overflow-hidden">
@@ -71,7 +49,8 @@ export function Achievements() {
         <div className="max-w-6xl mx-auto">
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
             {achievements.map((ach, i) => {
-              const Icon = ach.icon;
+              const Icon = getAchievementIcon(ach.iconName);
+              const color = ach.color || "blue";
               return (
                 <motion.div
                   key={i}
@@ -86,7 +65,7 @@ export function Achievements() {
                       <span className="text-xs font-mono text-gray-400 uppercase tracking-widest font-bold bg-white/5 px-3 py-1 rounded-full">
                         {ach.category}
                       </span>
-                      <div className={`p-3 rounded-xl bg-${ach.color}-500/10 text-${ach.color === 'orange' ? 'amber' : ach.color}-400 group-hover:scale-110 transition-transform`}>
+                      <div className={`p-3 rounded-xl bg-${color}-500/10 text-${color === 'orange' ? 'amber' : color}-400 group-hover:scale-110 transition-transform`}>
                         <Icon className="w-6 h-6" />
                       </div>
                     </div>

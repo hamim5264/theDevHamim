@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { motion, AnimatePresence } from "motion/react";
 import { Plus, Edit, Trash2, Calendar, X, Check } from "lucide-react";
-import { usePortfolio, TimelineEvent } from "../../context/PortfolioContext";
+import { usePortfolio, TimelineEvent, calculateDuration } from "../../context/PortfolioContext";
 
 export function AdminTimeline() {
   const { timelineEvents, addTimelineEvent, updateTimelineEvent, deleteTimelineEvent } = usePortfolio();
@@ -12,16 +12,33 @@ export function AdminTimeline() {
   const [editingEventId, setEditingEventId] = useState<string | number>("");
 
   // Form States
-  const [formYear, setFormYear] = useState("");
+  const [formStartYear, setFormStartYear] = useState("");
+  const [formStartMonth, setFormStartMonth] = useState("");
+  const [formStartDay, setFormStartDay] = useState("");
+  const [formEndYear, setFormEndYear] = useState("");
+  const [formEndMonth, setFormEndMonth] = useState("");
+  const [formEndDay, setFormEndDay] = useState("");
+  const [formIsPresent, setFormIsPresent] = useState(false);
   const [formTitle, setFormTitle] = useState("");
   const [formSubtitle, setFormSubtitle] = useState("");
   const [formDescription, setFormDescription] = useState("");
   const [formTech, setFormTech] = useState("");
-  const [formType, setFormType] = useState<"milestone" | "achievement" | "career" | "learning" | "work" | "edu" | "cert" | "hobby">("work");
+  const [formType, setFormType] = useState<"milestone" | "achievement" | "career" | "learning" | "work" | "family_business" | "edu" | "cert" | "hobby">("work");
+
+  const monthsList = [
+    "January", "February", "March", "April", "May", "June",
+    "July", "August", "September", "October", "November", "December"
+  ];
 
   const openAddModal = () => {
     setModalMode("add");
-    setFormYear("");
+    setFormStartYear(new Date().getFullYear().toString());
+    setFormStartMonth("");
+    setFormStartDay("");
+    setFormEndYear("");
+    setFormEndMonth("");
+    setFormEndDay("");
+    setFormIsPresent(false);
     setFormTitle("");
     setFormSubtitle("");
     setFormDescription("");
@@ -33,7 +50,35 @@ export function AdminTimeline() {
   const openEditModal = (event: TimelineEvent) => {
     setModalMode("edit");
     setEditingEventId(event.id);
-    setFormYear(event.year);
+
+    let sYear = event.startYear || "";
+    let sMonth = event.startMonth || "";
+    let sDay = event.startDay || "";
+    let eYear = event.endYear || "";
+    let eMonth = event.endMonth || "";
+    let eDay = event.endDay || "";
+    let isPres = event.isPresent || false;
+
+    if (!sYear && event.year) {
+      if (event.year.toLowerCase().includes("present")) {
+        isPres = true;
+      }
+      const matches = event.year.match(/\d{4}/g);
+      if (matches && matches.length >= 1) {
+        sYear = matches[0];
+        if (matches.length >= 2 && !isPres) {
+          eYear = matches[matches.length - 1];
+        }
+      }
+    }
+
+    setFormStartYear(sYear || new Date().getFullYear().toString());
+    setFormStartMonth(sMonth);
+    setFormStartDay(sDay);
+    setFormEndYear(eYear);
+    setFormEndMonth(eMonth);
+    setFormEndDay(eDay);
+    setFormIsPresent(isPres);
     setFormTitle(event.title);
     setFormSubtitle(event.subtitle || "");
     setFormDescription(event.description);
@@ -44,11 +89,34 @@ export function AdminTimeline() {
 
   const handleSave = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!formYear.trim() || !formTitle.trim() || !formDescription.trim()) return;
+    if (!formStartYear.trim() || (!formIsPresent && !formEndYear.trim()) || !formTitle.trim() || !formDescription.trim()) return;
+
+    const startStr = [
+      formStartMonth ? formStartMonth.slice(0, 3) : "",
+      formStartDay ? (formStartMonth ? `${formStartDay},` : formStartDay) : "",
+      formStartYear
+    ].filter(Boolean).join(" ");
+
+    const endStr = formIsPresent
+      ? "Present"
+      : [
+          formEndMonth ? formEndMonth.slice(0, 3) : "",
+          formEndDay ? (formEndMonth ? `${formEndDay},` : formEndDay) : "",
+          formEndYear
+        ].filter(Boolean).join(" ");
+
+    const displayYear = (startStr === endStr || !endStr) ? startStr : `${startStr} - ${endStr}`;
 
     const eventData: TimelineEvent = {
       id: modalMode === "add" ? Date.now().toString() : editingEventId,
-      year: formYear.trim(),
+      year: displayYear,
+      startYear: formStartYear.trim(),
+      startMonth: formStartMonth || undefined,
+      startDay: formStartDay || undefined,
+      endYear: formIsPresent ? undefined : formEndYear.trim(),
+      endMonth: formIsPresent ? undefined : (formEndMonth || undefined),
+      endDay: formIsPresent ? undefined : (formEndDay || undefined),
+      isPresent: formIsPresent,
       title: formTitle.trim(),
       subtitle: formSubtitle.trim() || undefined,
       description: formDescription.trim(),
@@ -74,6 +142,7 @@ export function AdminTimeline() {
   const getTypeColor = (type: string) => {
     switch (type) {
       case 'work': return 'blue';
+      case 'family_business': return 'amber';
       case 'edu': return 'green';
       case 'cert': return 'orange';
       case 'hobby': return 'pink';
@@ -128,10 +197,22 @@ export function AdminTimeline() {
               <div className="p-6 rounded-xl bg-white/5 border border-white/10 hover:bg-white/10 transition-all duration-300 group">
                 <div className="flex items-start justify-between mb-4">
                   <div className="flex-1">
-                    <div className="flex items-center gap-3 mb-2">
+                    <div className="flex flex-wrap items-center gap-2.5 mb-2">
                       <span className="text-sm font-mono text-blue-400 font-semibold">{event.year}</span>
+                      
+                      {/* Duration Count Chip */}
+                      <span className="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-purple-500/20 text-purple-300 border border-purple-500/30">
+                        {calculateDuration(event)}
+                      </span>
+
+                      {event.isPresent && (
+                        <span className="px-2 py-0.5 rounded-full text-xs font-bold bg-green-500/20 text-green-400 border border-green-500/30">
+                          Present
+                        </span>
+                      )}
+                      
                       <span className={`px-3 py-0.5 rounded-full text-xs bg-${getTypeColor(event.type)}-500/20 text-${getTypeColor(event.type)}-400 border border-${getTypeColor(event.type)}-500/30 capitalize`}>
-                        {event.type}
+                        {event.type.replace('_', ' ')}
                       </span>
                     </div>
                     <h3 className="text-2xl font-bold mb-1 text-white">{event.title}</h3>
@@ -207,10 +288,10 @@ export function AdminTimeline() {
               initial={{ opacity: 0, scale: 0.95 }}
               animate={{ opacity: 1, scale: 1 }}
               exit={{ opacity: 0, scale: 0.95 }}
-              className="relative w-full max-w-lg overflow-hidden bg-zinc-900 border border-white/10 rounded-2xl shadow-2xl"
+              className="relative w-full max-w-2xl max-h-[85vh] flex flex-col bg-zinc-900 border border-white/10 rounded-2xl shadow-2xl overflow-hidden"
             >
               {/* Header */}
-              <div className="flex items-center justify-between p-6 border-b border-white/10">
+              <div className="flex items-center justify-between p-6 border-b border-white/10 shrink-0">
                 <h3 className="text-xl font-bold text-white">
                   {modalMode === "add" ? "Add New Event" : "Edit Event"}
                 </h3>
@@ -223,36 +304,144 @@ export function AdminTimeline() {
               </div>
 
               {/* Form */}
-              <form onSubmit={handleSave} className="p-6 space-y-4">
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-400 mb-2">Year / Period</label>
-                    <input
-                      type="text"
-                      required
-                      placeholder="e.g. 2025 - Present"
-                      value={formYear}
-                      onChange={(e) => setFormYear(e.target.value)}
-                      className="w-full px-4 py-3 rounded-lg bg-white/5 border border-white/10 text-white placeholder-gray-500 focus:outline-none focus:border-white/30 transition-colors"
-                    />
-                  </div>
+              <form onSubmit={handleSave} className="p-6 space-y-5 overflow-y-auto custom-scrollbar">
+                <div>
+                  <label className="block text-sm font-medium text-gray-400 mb-2">Event Type</label>
+                  <select
+                    value={formType}
+                    onChange={(e) => setFormType(e.target.value as any)}
+                    className="w-full px-4 py-3 rounded-lg bg-zinc-800 border border-white/10 text-white focus:outline-none focus:border-white/30 transition-colors"
+                  >
+                    <option value="work">Work Experience</option>
+                    <option value="family_business">Family Business</option>
+                    <option value="edu">Education</option>
+                    <option value="cert">Certification</option>
+                    <option value="hobby">Hobby / Passion</option>
+                    <option value="milestone">Milestone</option>
+                    <option value="achievement">Achievement</option>
+                    <option value="career">Career Change</option>
+                    <option value="learning">Learning Path</option>
+                  </select>
+                </div>
 
-                  <div>
-                    <label className="block text-sm font-medium text-gray-400 mb-2">Event Type</label>
-                    <select
-                      value={formType}
-                      onChange={(e) => setFormType(e.target.value as any)}
-                      className="w-full px-4 py-3 rounded-lg bg-zinc-800 border border-white/10 text-white focus:outline-none focus:border-white/30 transition-colors"
-                    >
-                      <option value="work">Work Experience</option>
-                      <option value="edu">Education</option>
-                      <option value="cert">Certification</option>
-                      <option value="hobby">Hobby / Passion</option>
-                      <option value="milestone">Milestone</option>
-                      <option value="achievement">Achievement</option>
-                      <option value="career">Career Change</option>
-                      <option value="learning">Learning Path</option>
-                    </select>
+                {/* Time Period Section - Landscape Container Box */}
+                <div className="p-4 rounded-xl bg-white/5 border border-white/10 space-y-3">
+                  <div className="flex items-center justify-between">
+                    <label className="text-sm font-semibold text-gray-200">Time Period</label>
+                    <div className="flex items-center gap-2">
+                      <input
+                        type="checkbox"
+                        id="presentCheckbox"
+                        checked={formIsPresent}
+                        onChange={(e) => {
+                          setFormIsPresent(e.target.checked);
+                          if (e.target.checked) {
+                            setFormEndYear("");
+                            setFormEndMonth("");
+                            setFormEndDay("");
+                          }
+                        }}
+                        className="w-4 h-4 rounded border-white/20 bg-white/5 text-blue-500 focus:ring-0 focus:ring-offset-0 cursor-pointer"
+                      />
+                      <label htmlFor="presentCheckbox" className="text-sm font-medium text-gray-300 cursor-pointer">
+                        I currently work here
+                      </label>
+                    </div>
+                  </div>
+                  
+                  <div className="grid md:grid-cols-2 gap-4 items-center pt-1">
+                    {/* Start Date */}
+                    <div>
+                      <span className="block text-xs text-gray-400 mb-1.5 font-medium">Start Date</span>
+                      <div className="grid grid-cols-3 gap-2">
+                        {/* Start Year */}
+                        <select
+                          required
+                          size={1}
+                          value={formStartYear}
+                          onChange={(e) => setFormStartYear(e.target.value)}
+                          className="px-2.5 py-2 text-sm rounded-lg bg-zinc-800 border border-white/10 text-white focus:outline-none focus:border-white/30 transition-colors"
+                        >
+                          <option value="">Year</option>
+                          {Array.from({ length: new Date().getFullYear() - 1990 + 1 }, (_, i) => new Date().getFullYear() - i).map((y) => (
+                            <option key={y} value={y.toString()}>{y}</option>
+                          ))}
+                        </select>
+
+                        {/* Start Month */}
+                        <select
+                          value={formStartMonth}
+                          onChange={(e) => setFormStartMonth(e.target.value)}
+                          className="px-2.5 py-2 text-sm rounded-lg bg-zinc-800 border border-white/10 text-white focus:outline-none focus:border-white/30 transition-colors"
+                        >
+                          <option value="">Month</option>
+                          {monthsList.map((m) => (
+                            <option key={m} value={m}>{m.slice(0, 3)}</option>
+                          ))}
+                        </select>
+
+                        {/* Start Day */}
+                        <select
+                          value={formStartDay}
+                          onChange={(e) => setFormStartDay(e.target.value)}
+                          className="px-2.5 py-2 text-sm rounded-lg bg-zinc-800 border border-white/10 text-white focus:outline-none focus:border-white/30 transition-colors"
+                        >
+                          <option value="">Day</option>
+                          {Array.from({ length: 31 }, (_, i) => i + 1).map((d) => (
+                            <option key={d} value={d.toString()}>{d}</option>
+                          ))}
+                        </select>
+                      </div>
+                    </div>
+
+                    {/* End Date */}
+                    <div>
+                      <span className="block text-xs text-gray-400 mb-1.5 font-medium">End Date</span>
+                      {!formIsPresent ? (
+                        <div className="grid grid-cols-3 gap-2">
+                          {/* End Year */}
+                          <select
+                            required={!formIsPresent}
+                            value={formEndYear}
+                            onChange={(e) => setFormEndYear(e.target.value)}
+                            className="px-2.5 py-2 text-sm rounded-lg bg-zinc-800 border border-white/10 text-white focus:outline-none focus:border-white/30 transition-colors"
+                          >
+                            <option value="">Year</option>
+                            {Array.from({ length: new Date().getFullYear() - 1990 + 1 }, (_, i) => new Date().getFullYear() - i).map((y) => (
+                              <option key={y} value={y.toString()}>{y}</option>
+                            ))}
+                          </select>
+
+                          {/* End Month */}
+                          <select
+                            value={formEndMonth}
+                            onChange={(e) => setFormEndMonth(e.target.value)}
+                            className="px-2.5 py-2 text-sm rounded-lg bg-zinc-800 border border-white/10 text-white focus:outline-none focus:border-white/30 transition-colors"
+                          >
+                            <option value="">Month</option>
+                            {monthsList.map((m) => (
+                              <option key={m} value={m}>{m.slice(0, 3)}</option>
+                            ))}
+                          </select>
+
+                          {/* End Day */}
+                          <select
+                            value={formEndDay}
+                            onChange={(e) => setFormEndDay(e.target.value)}
+                            className="px-2.5 py-2 text-sm rounded-lg bg-zinc-800 border border-white/10 text-white focus:outline-none focus:border-white/30 transition-colors"
+                          >
+                            <option value="">Day</option>
+                            {Array.from({ length: 31 }, (_, i) => i + 1).map((d) => (
+                              <option key={d} value={d.toString()}>{d}</option>
+                            ))}
+                          </select>
+                        </div>
+                      ) : (
+                        <div className="h-[38px] flex items-center justify-center px-4 rounded-lg bg-blue-500/20 text-blue-400 font-semibold border border-blue-500/30 text-sm">
+                          Present (Ongoing)
+                        </div>
+                      )}
+                    </div>
                   </div>
                 </div>
 
@@ -303,7 +492,7 @@ export function AdminTimeline() {
                 </div>
 
                 {/* Footer Buttons */}
-                <div className="flex gap-3 pt-4 border-t border-white/10">
+                <div className="flex gap-3 pt-4 border-t border-white/10 shrink-0">
                   <button
                     type="button"
                     onClick={() => setIsModalOpen(false)}
