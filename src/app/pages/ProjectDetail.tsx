@@ -4,6 +4,7 @@ import { useParams, Link } from "react-router";
 import { ExternalLink, Github, ArrowLeft, CheckCircle, Info, Star, ShieldAlert, Share2, Check } from "lucide-react";
 import { useState } from "react";
 import { usePortfolio } from "../context/PortfolioContext";
+import playPng from "../../../assets/paly.png";
 
 export function ProjectDetail() {
   const { projectId } = useParams();
@@ -435,7 +436,7 @@ export function ProjectDetail() {
                   onClick={() => window.open(project.playstoreLink, "_blank", "noopener,noreferrer")}
                   className="px-8 py-4 bg-white hover:bg-gray-200 text-black font-bold rounded-lg transition-all duration-300 hover:scale-105 tracking-wide flex items-center gap-3 cursor-pointer shadow-xl shadow-white/10"
                 >
-                  <img src="/assets/paly.png" alt="PlayStore" className="w-6 h-6 object-contain" />
+                  <img src={playPng} alt="PlayStore" className="w-6 h-6 object-contain" />
                   DOWNLOAD NOW
                 </button>
               )}
