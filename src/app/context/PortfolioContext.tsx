@@ -1012,33 +1012,33 @@ export function PortfolioProvider({ children }: { children: React.ReactNode }) {
   const addProject = async (project: Project) => {
     const updated = [project, ...projects];
     setProjects(updated);
+    localStorage.setItem("portfolio_projects", JSON.stringify(updated));
     try {
       await setDoc(doc(db, "portfolio", "data"), { projects: updated }, { merge: true });
     } catch (err) {
       console.error(err);
-      localStorage.setItem("portfolio_projects", JSON.stringify(updated));
     }
   };
 
   const updateProject = async (id: string | number, updatedProject: Partial<Project>) => {
     const updated = projects.map(p => p.id === id ? { ...p, ...updatedProject } : p);
     setProjects(updated);
+    localStorage.setItem("portfolio_projects", JSON.stringify(updated));
     try {
       await setDoc(doc(db, "portfolio", "data"), { projects: updated }, { merge: true });
     } catch (err) {
       console.error(err);
-      localStorage.setItem("portfolio_projects", JSON.stringify(updated));
     }
   };
 
   const deleteProject = async (id: string | number) => {
     const updated = projects.filter(p => p.id !== id);
     setProjects(updated);
+    localStorage.setItem("portfolio_projects", JSON.stringify(updated));
     try {
       await setDoc(doc(db, "portfolio", "data"), { projects: updated }, { merge: true });
     } catch (err) {
       console.error(err);
-      localStorage.setItem("portfolio_projects", JSON.stringify(updated));
     }
   };
 
@@ -1243,12 +1243,11 @@ export function PortfolioProvider({ children }: { children: React.ReactNode }) {
   const updatePersonalInfo = async (info: Partial<PersonalInfo>) => {
     const updated = { ...personalInfo, ...info };
     setPersonalInfo(updated);
+    localStorage.setItem("portfolio_personal_info", JSON.stringify(updated));
     try {
       await setDoc(doc(db, "portfolio", "data"), { personalInfo: updated }, { merge: true });
     } catch (err) {
-      console.error(err);
-      localStorage.setItem("portfolio_personal_info", JSON.stringify(updated));
-      throw err;
+      console.error("Firestore update error, saved to localStorage fallback:", err);
     }
   };
 
