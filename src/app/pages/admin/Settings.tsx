@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "motion/react";
-import { User, Mail, Link as LinkIcon, Globe, Bell, Lock, Database, Palette, Users, Heart, Brain, Eye, EyeOff, Plus, Edit, Trash2, X, Check, Save, RotateCcw } from "lucide-react";
+import { User, Mail, Link as LinkIcon, Users, Heart, Brain, Eye, EyeOff, Plus, Edit, Trash2, X, Check, Save, RotateCcw } from "lucide-react";
 import { usePortfolio, SocialLink, FamilyMember } from "../../context/PortfolioContext";
 
 export function AdminSettings() {
@@ -151,9 +151,14 @@ export function AdminSettings() {
     setFormData({ ...personalInfo });
   }, [personalInfo]);
 
-  const handleSave = () => {
-    updatePersonalInfo(formData);
-    alert("Settings saved successfully!");
+  const handleSave = async () => {
+    try {
+      await updatePersonalInfo(formData);
+      alert("Settings saved successfully!");
+    } catch (err) {
+      console.error("Settings save failed:", err);
+      alert("Failed to save settings. Please try again.");
+    }
   };
 
   return (

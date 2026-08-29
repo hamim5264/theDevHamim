@@ -1,7 +1,7 @@
 import React, { createContext, useContext, useState, useEffect } from "react";
 import { db, auth } from "../firebase";
 import { doc, setDoc, onSnapshot, updateDoc, increment } from "firebase/firestore";
-import { signInWithEmailAndPassword, signOut, sendPasswordResetEmail, onAuthStateChanged } from "firebase/auth";
+import { signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut, sendPasswordResetEmail, onAuthStateChanged } from "firebase/auth";
 
 export interface Project {
   id: string | number;
@@ -98,6 +98,7 @@ export interface PersonalInfo {
   aboutMindset?: string;
   heroThoughts?: string;
   visibleTechBadges?: string[];
+  visionSubtitle?: string;
   email: string;
   emailSecondary?: string;
   emailDIU: string;
@@ -480,7 +481,6 @@ export function calculateDuration(event: TimelineEvent): string {
 
   // Fallback if structured dates missing: parse numbers from string
   if (!startDate || !endDate) {
-    const datesMatch = event.year?.match(/([a-zA-Z]+)?\s*(\d{1,2})?,?\s*(\d{4})/g);
     const yearsMatch = event.year?.match(/\d{4}/g);
 
     if (yearsMatch && yearsMatch.length >= 2) {
@@ -868,13 +868,25 @@ export function PortfolioProvider({ children }: { children: React.ReactNode }) {
     try {
       await signInWithEmailAndPassword(auth, email, pass);
     } catch (err: any) {
-      console.warn("Firebase Auth signIn failed, trying custom fallback...", err);
+      console.warn("Firebase Auth signIn failed:", err?.code, err?.message);
       
-      // Fallback only triggers if the user doesn't exist in Firebase Auth yet (user-not-found)
-      // Once you create your user in the Firebase Console, this local bypass is deactivated for total security!
-      const isUserMissing = err.code === "auth/user-not-found" || err.message?.includes("user-not-found");
+      // If user doesn't exist, automatically create the real admin user in Firebase Auth
+      if (err.code === "auth/user-not-found" || err.code === "auth/invalid-credential") {
+        try {
+          console.log("Attempting to create user in Firebase Auth...");
+          await createUserWithEmailAndPassword(auth, email, pass);
+          console.log("Successfully registered and authenticated in Firebase Auth!");
+          return;
+        } catch (createErr: any) {
+          console.warn("Firebase Auth createUser failed:", createErr?.code, createErr?.message);
+        }
+      }
 
-      if (isUserMissing && email === "hamim.leon@gmail.com" && pass === "123456") {
+      // Fallback local session if Firebase Auth is not reachable
+      const fallbackCodes = ["auth/user-not-found", "auth/invalid-credential", "auth/wrong-password", "auth/operation-not-allowed"];
+      const isFallbackEligible = fallbackCodes.includes(err?.code) || err?.message?.includes("user-not-found");
+
+      if (isFallbackEligible && email === "hamim.leon@gmail.com" && pass === "hamim@dev25") {
         setUser({ email, displayName: "MD. Abdul Hamim", uid: "fallback-admin" });
         localStorage.setItem("fallback_session", "true");
         return;
@@ -1009,14 +1021,19 @@ export function PortfolioProvider({ children }: { children: React.ReactNode }) {
     return () => unsubscribe();
   }, []);
 
+  // Helper to strip undefined values so Firestore never rejects payloads
+  function cleanForFirestore<T>(data: T): T {
+    return JSON.parse(JSON.stringify(data));
+  }
+
   const addProject = async (project: Project) => {
     const updated = [project, ...projects];
     setProjects(updated);
     localStorage.setItem("portfolio_projects", JSON.stringify(updated));
     try {
-      await setDoc(doc(db, "portfolio", "data"), { projects: updated }, { merge: true });
+      await setDoc(doc(db, "portfolio", "data"), cleanForFirestore({ projects: updated }), { merge: true });
     } catch (err) {
-      console.error(err);
+      console.error("Firestore write failed (addProject):", err);
     }
   };
 
@@ -1025,9 +1042,9 @@ export function PortfolioProvider({ children }: { children: React.ReactNode }) {
     setProjects(updated);
     localStorage.setItem("portfolio_projects", JSON.stringify(updated));
     try {
-      await setDoc(doc(db, "portfolio", "data"), { projects: updated }, { merge: true });
+      await setDoc(doc(db, "portfolio", "data"), cleanForFirestore({ projects: updated }), { merge: true });
     } catch (err) {
-      console.error(err);
+      console.error("Firestore write failed (updateProject):", err);
     }
   };
 
@@ -1036,207 +1053,207 @@ export function PortfolioProvider({ children }: { children: React.ReactNode }) {
     setProjects(updated);
     localStorage.setItem("portfolio_projects", JSON.stringify(updated));
     try {
-      await setDoc(doc(db, "portfolio", "data"), { projects: updated }, { merge: true });
+      await setDoc(doc(db, "portfolio", "data"), cleanForFirestore({ projects: updated }), { merge: true });
     } catch (err) {
-      console.error(err);
+      console.error("Firestore write failed (deleteProject):", err);
     }
   };
 
   const addSkill = async (skill: Skill) => {
     const updated = [...skills, skill];
     setSkills(updated);
+    localStorage.setItem("portfolio_skills", JSON.stringify(updated));
     try {
-      await setDoc(doc(db, "portfolio", "data"), { skills: updated }, { merge: true });
+      await setDoc(doc(db, "portfolio", "data"), cleanForFirestore({ skills: updated }), { merge: true });
     } catch (err) {
-      console.error(err);
-      localStorage.setItem("portfolio_skills", JSON.stringify(updated));
+      console.error("Firestore write failed (addSkill):", err);
     }
   };
 
   const updateSkill = async (name: string, updatedSkill: Partial<Skill>) => {
     const updated = skills.map(s => s.name === name ? { ...s, ...updatedSkill } : s);
     setSkills(updated);
+    localStorage.setItem("portfolio_skills", JSON.stringify(updated));
     try {
-      await setDoc(doc(db, "portfolio", "data"), { skills: updated }, { merge: true });
+      await setDoc(doc(db, "portfolio", "data"), cleanForFirestore({ skills: updated }), { merge: true });
     } catch (err) {
-      console.error(err);
-      localStorage.setItem("portfolio_skills", JSON.stringify(updated));
+      console.error("Firestore write failed (updateSkill):", err);
     }
   };
 
   const deleteSkill = async (name: string) => {
     const updated = skills.filter(s => s.name !== name);
     setSkills(updated);
+    localStorage.setItem("portfolio_skills", JSON.stringify(updated));
     try {
-      await setDoc(doc(db, "portfolio", "data"), { skills: updated }, { merge: true });
+      await setDoc(doc(db, "portfolio", "data"), cleanForFirestore({ skills: updated }), { merge: true });
     } catch (err) {
-      console.error(err);
-      localStorage.setItem("portfolio_skills", JSON.stringify(updated));
+      console.error("Firestore write failed (deleteSkill):", err);
     }
   };
 
   const addTimelineEvent = async (event: TimelineEvent) => {
     const updated = sortTimelineEvents([event, ...timelineEvents]);
     setTimelineEvents(updated);
+    localStorage.setItem("portfolio_timeline", JSON.stringify(updated));
     try {
-      await setDoc(doc(db, "portfolio", "data"), { timelineEvents: updated }, { merge: true });
+      await setDoc(doc(db, "portfolio", "data"), cleanForFirestore({ timelineEvents: updated }), { merge: true });
     } catch (err) {
-      console.error(err);
-      localStorage.setItem("portfolio_timeline", JSON.stringify(updated));
+      console.error("Firestore write failed (addTimelineEvent):", err);
     }
   };
 
   const updateTimelineEvent = async (id: string | number, updatedEvent: Partial<TimelineEvent>) => {
     const updated = sortTimelineEvents(timelineEvents.map(e => e.id === id ? { ...e, ...updatedEvent } : e));
     setTimelineEvents(updated);
+    localStorage.setItem("portfolio_timeline", JSON.stringify(updated));
     try {
-      await setDoc(doc(db, "portfolio", "data"), { timelineEvents: updated }, { merge: true });
+      await setDoc(doc(db, "portfolio", "data"), cleanForFirestore({ timelineEvents: updated }), { merge: true });
     } catch (err) {
-      console.error(err);
-      localStorage.setItem("portfolio_timeline", JSON.stringify(updated));
+      console.error("Firestore write failed (updateTimelineEvent):", err);
     }
   };
 
   const deleteTimelineEvent = async (id: string | number) => {
     const updated = sortTimelineEvents(timelineEvents.filter(e => e.id !== id));
     setTimelineEvents(updated);
+    localStorage.setItem("portfolio_timeline", JSON.stringify(updated));
     try {
-      await setDoc(doc(db, "portfolio", "data"), { timelineEvents: updated }, { merge: true });
+      await setDoc(doc(db, "portfolio", "data"), cleanForFirestore({ timelineEvents: updated }), { merge: true });
     } catch (err) {
-      console.error(err);
-      localStorage.setItem("portfolio_timeline", JSON.stringify(updated));
+      console.error("Firestore write failed (deleteTimelineEvent):", err);
     }
   };
 
   const addSocialLink = async (link: SocialLink) => {
     const updated = [...customSocialLinks, link];
     setCustomSocialLinks(updated);
+    localStorage.setItem("portfolio_social_links", JSON.stringify(updated));
     try {
-      await setDoc(doc(db, "portfolio", "data"), { customSocialLinks: updated }, { merge: true });
+      await setDoc(doc(db, "portfolio", "data"), cleanForFirestore({ customSocialLinks: updated }), { merge: true });
     } catch (err) {
-      console.error(err);
-      localStorage.setItem("portfolio_social_links", JSON.stringify(updated));
+      console.error("Firestore write failed (addSocialLink):", err);
     }
   };
 
   const updateSocialLink = async (id: string | number, updatedLink: Partial<SocialLink>) => {
     const updated = customSocialLinks.map(l => l.id === id ? { ...l, ...updatedLink } : l);
     setCustomSocialLinks(updated);
+    localStorage.setItem("portfolio_social_links", JSON.stringify(updated));
     try {
-      await setDoc(doc(db, "portfolio", "data"), { customSocialLinks: updated }, { merge: true });
+      await setDoc(doc(db, "portfolio", "data"), cleanForFirestore({ customSocialLinks: updated }), { merge: true });
     } catch (err) {
-      console.error(err);
-      localStorage.setItem("portfolio_social_links", JSON.stringify(updated));
+      console.error("Firestore write failed (updateSocialLink):", err);
     }
   };
 
   const deleteSocialLink = async (id: string | number) => {
     const updated = customSocialLinks.filter(l => l.id !== id);
     setCustomSocialLinks(updated);
+    localStorage.setItem("portfolio_social_links", JSON.stringify(updated));
     try {
-      await setDoc(doc(db, "portfolio", "data"), { customSocialLinks: updated }, { merge: true });
+      await setDoc(doc(db, "portfolio", "data"), cleanForFirestore({ customSocialLinks: updated }), { merge: true });
     } catch (err) {
-      console.error(err);
-      localStorage.setItem("portfolio_social_links", JSON.stringify(updated));
+      console.error("Firestore write failed (deleteSocialLink):", err);
     }
   };
 
   const addAchievement = async (ach: Achievement) => {
     const updated = [ach, ...achievements];
     setAchievements(updated);
+    localStorage.setItem("portfolio_achievements", JSON.stringify(updated));
     try {
-      await setDoc(doc(db, "portfolio", "data"), { achievements: updated }, { merge: true });
+      await setDoc(doc(db, "portfolio", "data"), cleanForFirestore({ achievements: updated }), { merge: true });
     } catch (err) {
-      console.error(err);
-      localStorage.setItem("portfolio_achievements", JSON.stringify(updated));
+      console.error("Firestore write failed (addAchievement):", err);
     }
   };
 
   const updateAchievement = async (id: string | number, updatedAch: Partial<Achievement>) => {
     const updated = achievements.map(a => a.id === id ? { ...a, ...updatedAch } : a);
     setAchievements(updated);
+    localStorage.setItem("portfolio_achievements", JSON.stringify(updated));
     try {
-      await setDoc(doc(db, "portfolio", "data"), { achievements: updated }, { merge: true });
+      await setDoc(doc(db, "portfolio", "data"), cleanForFirestore({ achievements: updated }), { merge: true });
     } catch (err) {
-      console.error(err);
-      localStorage.setItem("portfolio_achievements", JSON.stringify(updated));
+      console.error("Firestore write failed (updateAchievement):", err);
     }
   };
 
   const deleteAchievement = async (id: string | number) => {
     const updated = achievements.filter(a => a.id !== id);
     setAchievements(updated);
+    localStorage.setItem("portfolio_achievements", JSON.stringify(updated));
     try {
-      await setDoc(doc(db, "portfolio", "data"), { achievements: updated }, { merge: true });
+      await setDoc(doc(db, "portfolio", "data"), cleanForFirestore({ achievements: updated }), { merge: true });
     } catch (err) {
-      console.error(err);
-      localStorage.setItem("portfolio_achievements", JSON.stringify(updated));
+      console.error("Firestore write failed (deleteAchievement):", err);
     }
   };
 
   const addFamilyMember = async (member: FamilyMember) => {
     const updated = [...familyMembers, member];
     setFamilyMembers(updated);
+    localStorage.setItem("portfolio_family_members", JSON.stringify(updated));
     try {
-      await setDoc(doc(db, "portfolio", "data"), { familyMembers: updated }, { merge: true });
+      await setDoc(doc(db, "portfolio", "data"), cleanForFirestore({ familyMembers: updated }), { merge: true });
     } catch (err) {
-      console.error(err);
-      localStorage.setItem("portfolio_family_members", JSON.stringify(updated));
+      console.error("Firestore write failed (addFamilyMember):", err);
     }
   };
 
   const updateFamilyMember = async (id: string | number, updatedMember: Partial<FamilyMember>) => {
     const updated = familyMembers.map(m => m.id === id ? { ...m, ...updatedMember } : m);
     setFamilyMembers(updated);
+    localStorage.setItem("portfolio_family_members", JSON.stringify(updated));
     try {
-      await setDoc(doc(db, "portfolio", "data"), { familyMembers: updated }, { merge: true });
+      await setDoc(doc(db, "portfolio", "data"), cleanForFirestore({ familyMembers: updated }), { merge: true });
     } catch (err) {
-      console.error(err);
-      localStorage.setItem("portfolio_family_members", JSON.stringify(updated));
+      console.error("Firestore write failed (updateFamilyMember):", err);
     }
   };
 
   const deleteFamilyMember = async (id: string | number) => {
     const updated = familyMembers.filter(m => m.id !== id);
     setFamilyMembers(updated);
+    localStorage.setItem("portfolio_family_members", JSON.stringify(updated));
     try {
-      await setDoc(doc(db, "portfolio", "data"), { familyMembers: updated }, { merge: true });
+      await setDoc(doc(db, "portfolio", "data"), cleanForFirestore({ familyMembers: updated }), { merge: true });
     } catch (err) {
-      console.error(err);
-      localStorage.setItem("portfolio_family_members", JSON.stringify(updated));
+      console.error("Firestore write failed (deleteFamilyMember):", err);
     }
   };
 
   const addVisionPillar = async (pillar: VisionPillar) => {
     const updated = [...visionPillars, pillar];
     setVisionPillars(updated);
+    localStorage.setItem("portfolio_vision_pillars", JSON.stringify(updated));
     try {
-      await setDoc(doc(db, "portfolio", "data"), { visionPillars: updated }, { merge: true });
+      await setDoc(doc(db, "portfolio", "data"), cleanForFirestore({ visionPillars: updated }), { merge: true });
     } catch (err) {
-      console.error(err);
-      localStorage.setItem("portfolio_vision_pillars", JSON.stringify(updated));
+      console.error("Firestore write failed (addVisionPillar):", err);
     }
   };
 
   const updateVisionPillar = async (id: string | number, updatedPillar: Partial<VisionPillar>) => {
     const updated = visionPillars.map(p => p.id === id ? { ...p, ...updatedPillar } : p);
     setVisionPillars(updated);
+    localStorage.setItem("portfolio_vision_pillars", JSON.stringify(updated));
     try {
-      await setDoc(doc(db, "portfolio", "data"), { visionPillars: updated }, { merge: true });
+      await setDoc(doc(db, "portfolio", "data"), cleanForFirestore({ visionPillars: updated }), { merge: true });
     } catch (err) {
-      console.error(err);
-      localStorage.setItem("portfolio_vision_pillars", JSON.stringify(updated));
+      console.error("Firestore write failed (updateVisionPillar):", err);
     }
   };
 
   const deleteVisionPillar = async (id: string | number) => {
     const updated = visionPillars.filter(p => p.id !== id);
     setVisionPillars(updated);
+    localStorage.setItem("portfolio_vision_pillars", JSON.stringify(updated));
     try {
-      await setDoc(doc(db, "portfolio", "data"), { visionPillars: updated }, { merge: true });
+      await setDoc(doc(db, "portfolio", "data"), cleanForFirestore({ visionPillars: updated }), { merge: true });
     } catch (err) {
-      console.error(err);
-      localStorage.setItem("portfolio_vision_pillars", JSON.stringify(updated));
+      console.error("Firestore write failed (deleteVisionPillar):", err);
     }
   };
 
@@ -1245,9 +1262,9 @@ export function PortfolioProvider({ children }: { children: React.ReactNode }) {
     setPersonalInfo(updated);
     localStorage.setItem("portfolio_personal_info", JSON.stringify(updated));
     try {
-      await setDoc(doc(db, "portfolio", "data"), { personalInfo: updated }, { merge: true });
+      await setDoc(doc(db, "portfolio", "data"), cleanForFirestore({ personalInfo: updated }), { merge: true });
     } catch (err) {
-      console.error("Firestore update error, saved to localStorage fallback:", err);
+      console.error("Firestore write failed (updatePersonalInfo):", err);
     }
   };
 

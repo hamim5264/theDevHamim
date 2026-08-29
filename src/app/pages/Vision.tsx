@@ -1,6 +1,6 @@
 import { Navigation } from "../components/Navigation";
 import { motion } from "motion/react";
-import { Compass, Cpu, Smartphone, Award, Lightbulb, Star, Rocket } from "lucide-react";
+import { Compass, Cpu, Smartphone, Lightbulb, Star, Rocket } from "lucide-react";
 import { usePortfolio } from "../context/PortfolioContext";
 
 export function Vision() {

@@ -1,7 +1,7 @@
 import { Navigation } from "../components/Navigation";
 import { motion } from "motion/react";
 import { Link } from "react-router";
-import { ExternalLink, Github, ArrowRight } from "lucide-react";
+import { ArrowRight } from "lucide-react";
 import { usePortfolio } from "../context/PortfolioContext";
 
 export function Projects() {

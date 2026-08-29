@@ -1,6 +1,6 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "motion/react";
-import { User, Eye, Compass, Cpu, Smartphone, Lightbulb, Plus, Edit, Trash2, Save, Check, X, Star, Rocket } from "lucide-react";
+import { User, Eye, Compass, Plus, Edit, Trash2, Save, Check, X } from "lucide-react";
 import { usePortfolio, VisionPillar } from "../../context/PortfolioContext";
 
 export function AdminAboutVision() {
@@ -24,6 +24,20 @@ export function AdminAboutVision() {
     philosophy: personalInfo.philosophy || "",
     visionSubtitle: personalInfo.visionSubtitle || "",
   });
+
+  // Sync state if personalInfo loads or updates
+  useEffect(() => {
+    setAboutData({
+      about: personalInfo.about || "",
+      aboutBeginning: personalInfo.aboutBeginning || "",
+      aboutAwakening: personalInfo.aboutAwakening || "",
+      aboutStruggle: personalInfo.aboutStruggle || "",
+      aboutBreakthrough: personalInfo.aboutBreakthrough || "",
+      aboutMindset: personalInfo.aboutMindset || "",
+      philosophy: personalInfo.philosophy || "",
+      visionSubtitle: personalInfo.visionSubtitle || "",
+    });
+  }, [personalInfo]);
 
   // Modal state for Vision Pillars
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -84,9 +98,14 @@ export function AdminAboutVision() {
     }
   };
 
-  const handleSaveAboutStory = () => {
-    updatePersonalInfo(aboutData);
-    alert("About & Vision information updated successfully!");
+  const handleSaveAboutStory = async () => {
+    try {
+      await updatePersonalInfo(aboutData);
+      alert("About & Vision information updated successfully!");
+    } catch (err) {
+      console.error("About & Vision save failed:", err);
+      alert("Failed to save. Please try again.");
+    }
   };
 
   return (

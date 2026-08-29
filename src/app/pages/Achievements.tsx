@@ -1,6 +1,6 @@
 import { Navigation } from "../components/Navigation";
 import { motion } from "motion/react";
-import { Award, ShieldAlert, Cpu, Rocket, BookOpen, Star, Trophy, Shield, Zap } from "lucide-react";
+import { Award, Cpu, Rocket, BookOpen, Star, Trophy, Shield } from "lucide-react";
 import { usePortfolio } from "../context/PortfolioContext";
 
 export function Achievements() {

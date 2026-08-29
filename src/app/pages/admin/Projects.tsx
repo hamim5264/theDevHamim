@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { motion, AnimatePresence } from "motion/react";
-import { Plus, Edit, Trash2, Eye, X, Search, Check, Save } from "lucide-react";
+import { Plus, Edit, Trash2, X, Search, Save } from "lucide-react";
 import { usePortfolio, Project } from "../../context/PortfolioContext";
 
 export function AdminProjects() {
@@ -23,6 +23,7 @@ export function AdminProjects() {
     users: "Live",
     lastUpdated: "Today",
     liveLink: "",
+    playstoreLink: "",
     githubLink: ""
   });
 

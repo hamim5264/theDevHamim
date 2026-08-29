@@ -1,6 +1,6 @@
 import { Navigation } from "../components/Navigation";
 import { motion } from "motion/react";
-import { Home, Users, Heart, GraduationCap, Briefcase, MapPin, User, Star, Award } from "lucide-react";
+import { Home, Users, Heart, GraduationCap, Briefcase, MapPin, User, Star } from "lucide-react";
 import { usePortfolio } from "../context/PortfolioContext";
 
 export function PersonalLife() {

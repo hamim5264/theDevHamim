@@ -111,14 +111,14 @@ export function AdminTimeline() {
       id: modalMode === "add" ? Date.now().toString() : editingEventId,
       year: displayYear,
       startYear: formStartYear.trim(),
-      startMonth: formStartMonth || undefined,
-      startDay: formStartDay || undefined,
-      endYear: formIsPresent ? undefined : formEndYear.trim(),
-      endMonth: formIsPresent ? undefined : (formEndMonth || undefined),
-      endDay: formIsPresent ? undefined : (formEndDay || undefined),
+      startMonth: formStartMonth || "",
+      startDay: formStartDay || "",
+      endYear: formIsPresent ? "" : formEndYear.trim(),
+      endMonth: formIsPresent ? "" : (formEndMonth || ""),
+      endDay: formIsPresent ? "" : (formEndDay || ""),
       isPresent: formIsPresent,
       title: formTitle.trim(),
-      subtitle: formSubtitle.trim() || undefined,
+      subtitle: formSubtitle.trim() || "",
       description: formDescription.trim(),
       tech: formTech.trim(),
       type: formType,
@@ -178,7 +178,7 @@ export function AdminTimeline() {
       {/* Timeline */}
       <div className="max-w-4xl">
         <AnimatePresence mode="popLayout">
-          {timelineEvents.map((event, i) => (
+          {timelineEvents.map((event) => (
             <motion.div
               key={event.id}
               layout

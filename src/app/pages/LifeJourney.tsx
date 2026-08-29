@@ -1,10 +1,10 @@
 import { Navigation } from "../components/Navigation";
 import { motion } from "motion/react";
-import { Briefcase, GraduationCap, Award, BookOpen, Star, Zap } from "lucide-react";
+import { Briefcase, GraduationCap, Award, BookOpen } from "lucide-react";
 import { usePortfolio, calculateDuration } from "../context/PortfolioContext";
 
 export function LifeJourney() {
-  const { personalInfo, timelineEvents } = usePortfolio();
+  const { timelineEvents } = usePortfolio();
 
   const getEventIcon = (type: string) => {
     switch (type) {

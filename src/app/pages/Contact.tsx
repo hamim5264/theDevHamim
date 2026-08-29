@@ -1,13 +1,12 @@
-import React, { useRef, useState } from "react";
+import React, { useState } from "react";
 import { Navigation } from "../components/Navigation";
 import { motion } from "motion/react";
-import { Mail, Github, Linkedin, Download, MessageCircle, ExternalLink, Send, Phone, MessageSquare, Compass, Globe, Youtube, Video, Share2 } from "lucide-react";
+import { Mail, Github, Linkedin, MessageCircle, ExternalLink, Send, Phone, MessageSquare, Compass, Globe, Youtube, Video } from "lucide-react";
 import emailjs from "@emailjs/browser";
 import { usePortfolio } from "../context/PortfolioContext";
 
 export function Contact() {
   const { personalInfo, customSocialLinks } = usePortfolio();
-  const formRef = useRef<HTMLFormElement>(null);
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
   const [error, setError] = useState(false);

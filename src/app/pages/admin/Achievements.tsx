@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { motion, AnimatePresence } from "motion/react";
-import { Award, Plus, Edit, Trash2, X, Check, Rocket, Star, BookOpen, Cpu, Trophy, Shield, Zap } from "lucide-react";
+import { Award, Plus, Edit, Trash2, X, Check, Rocket, Star, BookOpen, Cpu, Trophy, Shield } from "lucide-react";
 import { usePortfolio, Achievement } from "../../context/PortfolioContext";
 
 export function AdminAchievements() {

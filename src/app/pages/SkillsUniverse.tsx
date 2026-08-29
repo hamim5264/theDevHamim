@@ -1,6 +1,6 @@
 import { Navigation } from "../components/Navigation";
 import { motion } from "motion/react";
-import { Cpu, Smartphone, Database, Grid, Layout, Wrench } from "lucide-react";
+import { Cpu, Smartphone, Database, Grid, Wrench } from "lucide-react";
 
 import { usePortfolio } from "../context/PortfolioContext";
 

@@ -128,7 +128,7 @@ export function AdminSkills() {
       {/* Skills Grid */}
       <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
         <AnimatePresence mode="popLayout">
-          {filteredSkills.map((skill, i) => (
+          {filteredSkills.map((skill) => (
             <motion.div
               key={skill.name}
               layout
