@@ -918,27 +918,53 @@ export function PortfolioProvider({ children }: { children: React.ReactNode }) {
         const data = docSnap.data();
         let dbProjects = data.projects || [];
         
-        setProjects(dbProjects);
+        if (data.projects) {
+          setProjects(dbProjects);
+          localStorage.setItem("portfolio_projects", JSON.stringify(dbProjects));
+        }
         if (data.personalInfo) {
-          setPersonalInfo(prev => ({
-            ...defaultPersonalInfo,
-            ...prev,
-            ...data.personalInfo
-          }));
+          const mergedInfo = { ...defaultPersonalInfo, ...data.personalInfo };
+          setPersonalInfo(mergedInfo);
+          localStorage.setItem("portfolio_personal_info", JSON.stringify(mergedInfo));
         }
         if (data.profileViews !== undefined) setProfileViews(data.profileViews);
-        if (data.skills) setSkills(data.skills);
-        else setSkills(defaultSkills);
-        if (data.timelineEvents) setTimelineEvents(sortTimelineEvents(data.timelineEvents));
-        else setTimelineEvents(sortTimelineEvents(defaultTimeline));
-        if (data.customSocialLinks) setCustomSocialLinks(data.customSocialLinks);
-        else setCustomSocialLinks(defaultSocialLinks);
-        if (data.achievements) setAchievements(data.achievements);
-        else setAchievements(defaultAchievements);
-        if (data.familyMembers) setFamilyMembers(data.familyMembers);
-        else setFamilyMembers(defaultFamilyMembers);
-        if (data.visionPillars) setVisionPillars(data.visionPillars);
-        else setVisionPillars(defaultVisionPillars);
+        if (data.skills) {
+          setSkills(data.skills);
+          localStorage.setItem("portfolio_skills", JSON.stringify(data.skills));
+        } else {
+          setSkills(defaultSkills);
+        }
+        if (data.timelineEvents) {
+          const sorted = sortTimelineEvents(data.timelineEvents);
+          setTimelineEvents(sorted);
+          localStorage.setItem("portfolio_timeline", JSON.stringify(sorted));
+        } else {
+          setTimelineEvents(sortTimelineEvents(defaultTimeline));
+        }
+        if (data.customSocialLinks) {
+          setCustomSocialLinks(data.customSocialLinks);
+          localStorage.setItem("portfolio_social_links", JSON.stringify(data.customSocialLinks));
+        } else {
+          setCustomSocialLinks(defaultSocialLinks);
+        }
+        if (data.achievements) {
+          setAchievements(data.achievements);
+          localStorage.setItem("portfolio_achievements", JSON.stringify(data.achievements));
+        } else {
+          setAchievements(defaultAchievements);
+        }
+        if (data.familyMembers) {
+          setFamilyMembers(data.familyMembers);
+          localStorage.setItem("portfolio_family_members", JSON.stringify(data.familyMembers));
+        } else {
+          setFamilyMembers(defaultFamilyMembers);
+        }
+        if (data.visionPillars) {
+          setVisionPillars(data.visionPillars);
+          localStorage.setItem("portfolio_vision_pillars", JSON.stringify(data.visionPillars));
+        } else {
+          setVisionPillars(defaultVisionPillars);
+        }
         setLoading(false);
       } else {
         // If doc doesn't exist, create it with defaults
