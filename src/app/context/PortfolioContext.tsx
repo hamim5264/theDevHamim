@@ -912,123 +912,145 @@ export function PortfolioProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     const docRef = doc(db, "portfolio", "data");
 
+    // Helper: load from localStorage or use hardcoded defaults (NEVER writes to Firestore)
+    const loadLocalDefaults = () => {
+      const savedProjects = localStorage.getItem("portfolio_projects");
+      setProjects(savedProjects ? JSON.parse(savedProjects) : defaultProjects);
+
+      const savedInfo = localStorage.getItem("portfolio_personal_info");
+      setPersonalInfo(savedInfo ? JSON.parse(savedInfo) : defaultPersonalInfo);
+
+      const savedSkills = localStorage.getItem("portfolio_skills");
+      setSkills(savedSkills ? JSON.parse(savedSkills) : defaultSkills);
+
+      const savedTimeline = localStorage.getItem("portfolio_timeline");
+      setTimelineEvents(savedTimeline ? sortTimelineEvents(JSON.parse(savedTimeline)) : sortTimelineEvents(defaultTimeline));
+
+      const savedSocial = localStorage.getItem("portfolio_social_links");
+      setCustomSocialLinks(savedSocial ? JSON.parse(savedSocial) : defaultSocialLinks);
+
+      const savedAch = localStorage.getItem("portfolio_achievements");
+      setAchievements(savedAch ? JSON.parse(savedAch) : defaultAchievements);
+
+      const savedFam = localStorage.getItem("portfolio_family_members");
+      setFamilyMembers(savedFam ? JSON.parse(savedFam) : defaultFamilyMembers);
+
+      const savedVis = localStorage.getItem("portfolio_vision_pillars");
+      setVisionPillars(savedVis ? JSON.parse(savedVis) : defaultVisionPillars);
+
+      const savedViews = localStorage.getItem("portfolio_views");
+      const currentViews = savedViews ? parseInt(savedViews, 10) + 1 : 1;
+      setProfileViews(currentViews);
+      localStorage.setItem("portfolio_views", currentViews.toString());
+    };
+
     // Live Snapshot Listener
     const unsubscribe = onSnapshot(docRef, async (docSnap) => {
       if (docSnap.exists()) {
         const data = docSnap.data();
-        let dbProjects = data.projects || [];
-        
-        if (data.projects) {
+
+        // Projects — always use Firestore data if present, fallback to localStorage/defaults
+        const dbProjects = data.projects || [];
+        if (data.projects && data.projects.length > 0) {
           setProjects(dbProjects);
           localStorage.setItem("portfolio_projects", JSON.stringify(dbProjects));
+        } else {
+          const saved = localStorage.getItem("portfolio_projects");
+          setProjects(saved ? JSON.parse(saved) : defaultProjects);
         }
+
         if (data.personalInfo) {
           const mergedInfo = { ...defaultPersonalInfo, ...data.personalInfo };
           setPersonalInfo(mergedInfo);
           localStorage.setItem("portfolio_personal_info", JSON.stringify(mergedInfo));
         }
         if (data.profileViews !== undefined) setProfileViews(data.profileViews);
-        if (data.skills) {
+
+        if (data.skills && data.skills.length > 0) {
           setSkills(data.skills);
           localStorage.setItem("portfolio_skills", JSON.stringify(data.skills));
         } else {
-          setSkills(defaultSkills);
+          const saved = localStorage.getItem("portfolio_skills");
+          setSkills(saved ? JSON.parse(saved) : defaultSkills);
         }
-        if (data.timelineEvents) {
+
+        if (data.timelineEvents && data.timelineEvents.length > 0) {
           const sorted = sortTimelineEvents(data.timelineEvents);
           setTimelineEvents(sorted);
           localStorage.setItem("portfolio_timeline", JSON.stringify(sorted));
         } else {
-          setTimelineEvents(sortTimelineEvents(defaultTimeline));
+          const saved = localStorage.getItem("portfolio_timeline");
+          setTimelineEvents(saved ? sortTimelineEvents(JSON.parse(saved)) : sortTimelineEvents(defaultTimeline));
         }
-        if (data.customSocialLinks) {
+
+        if (data.customSocialLinks && data.customSocialLinks.length > 0) {
           setCustomSocialLinks(data.customSocialLinks);
           localStorage.setItem("portfolio_social_links", JSON.stringify(data.customSocialLinks));
         } else {
-          setCustomSocialLinks(defaultSocialLinks);
+          const saved = localStorage.getItem("portfolio_social_links");
+          setCustomSocialLinks(saved ? JSON.parse(saved) : defaultSocialLinks);
         }
-        if (data.achievements) {
+
+        if (data.achievements && data.achievements.length > 0) {
           setAchievements(data.achievements);
           localStorage.setItem("portfolio_achievements", JSON.stringify(data.achievements));
         } else {
-          setAchievements(defaultAchievements);
+          const saved = localStorage.getItem("portfolio_achievements");
+          setAchievements(saved ? JSON.parse(saved) : defaultAchievements);
         }
-        if (data.familyMembers) {
+
+        if (data.familyMembers && data.familyMembers.length > 0) {
           setFamilyMembers(data.familyMembers);
           localStorage.setItem("portfolio_family_members", JSON.stringify(data.familyMembers));
         } else {
-          setFamilyMembers(defaultFamilyMembers);
+          const saved = localStorage.getItem("portfolio_family_members");
+          setFamilyMembers(saved ? JSON.parse(saved) : defaultFamilyMembers);
         }
-        if (data.visionPillars) {
+
+        if (data.visionPillars && data.visionPillars.length > 0) {
           setVisionPillars(data.visionPillars);
           localStorage.setItem("portfolio_vision_pillars", JSON.stringify(data.visionPillars));
         } else {
-          setVisionPillars(defaultVisionPillars);
+          const saved = localStorage.getItem("portfolio_vision_pillars");
+          setVisionPillars(saved ? JSON.parse(saved) : defaultVisionPillars);
         }
+
         setLoading(false);
       } else {
-        // If doc doesn't exist, create it with defaults
-        await setDoc(docRef, {
-          projects: defaultProjects,
-          personalInfo: defaultPersonalInfo,
-          profileViews: 1,
-          skills: defaultSkills,
-          timelineEvents: defaultTimeline,
-          customSocialLinks: defaultSocialLinks,
-          achievements: defaultAchievements,
-          familyMembers: defaultFamilyMembers,
-          visionPillars: defaultVisionPillars
-        });
-        setProjects(defaultProjects);
-        setPersonalInfo(defaultPersonalInfo);
-        setProfileViews(1);
-        setSkills(defaultSkills);
-        setTimelineEvents(sortTimelineEvents(defaultTimeline));
-        setCustomSocialLinks(defaultSocialLinks);
-        setAchievements(defaultAchievements);
-        setFamilyMembers(defaultFamilyMembers);
-        setVisionPillars(defaultVisionPillars);
+        // Document doesn't exist in Firestore yet.
+        // ONLY an authenticated admin should seed the initial data.
+        // Regular visitors just see local defaults — NO Firestore write.
+        console.warn("Firestore document 'portfolio/data' does not exist.");
+
+        // Check if current user is an authenticated admin
+        const currentUser = auth.currentUser;
+        if (currentUser && currentUser.email === "hamim.leon@gmail.com") {
+          // Admin is logged in — safe to seed initial data
+          console.log("Admin detected. Seeding initial Firestore data...");
+          try {
+            await setDoc(docRef, {
+              projects: defaultProjects,
+              personalInfo: defaultPersonalInfo,
+              profileViews: 1,
+              skills: defaultSkills,
+              timelineEvents: defaultTimeline,
+              customSocialLinks: defaultSocialLinks,
+              achievements: defaultAchievements,
+              familyMembers: defaultFamilyMembers,
+              visionPillars: defaultVisionPillars
+            });
+          } catch (seedErr) {
+            console.error("Failed to seed Firestore:", seedErr);
+          }
+        }
+
+        // Always load defaults for display regardless
+        loadLocalDefaults();
         setLoading(false);
       }
     }, (error) => {
       console.error("Firestore loading error, falling back to localStorage", error);
-      // Fallback to local storage
-      const savedProjects = localStorage.getItem("portfolio_projects");
-      if (savedProjects) setProjects(JSON.parse(savedProjects));
-      else setProjects(defaultProjects);
-
-      const savedInfo = localStorage.getItem("portfolio_personal_info");
-      if (savedInfo) setPersonalInfo(JSON.parse(savedInfo));
-      else setPersonalInfo(defaultPersonalInfo);
-
-      const savedSkills = localStorage.getItem("portfolio_skills");
-      if (savedSkills) setSkills(JSON.parse(savedSkills));
-      else setSkills(defaultSkills);
-
-      const savedTimeline = localStorage.getItem("portfolio_timeline");
-      if (savedTimeline) setTimelineEvents(sortTimelineEvents(JSON.parse(savedTimeline)));
-      else setTimelineEvents(sortTimelineEvents(defaultTimeline));
-
-      const savedSocial = localStorage.getItem("portfolio_social_links");
-      if (savedSocial) setCustomSocialLinks(JSON.parse(savedSocial));
-      else setCustomSocialLinks(defaultSocialLinks);
-
-      const savedAch = localStorage.getItem("portfolio_achievements");
-      if (savedAch) setAchievements(JSON.parse(savedAch));
-      else setAchievements(defaultAchievements);
-
-      const savedFam = localStorage.getItem("portfolio_family_members");
-      if (savedFam) setFamilyMembers(JSON.parse(savedFam));
-      else setFamilyMembers(defaultFamilyMembers);
-
-      const savedVis = localStorage.getItem("portfolio_vision_pillars");
-      if (savedVis) setVisionPillars(JSON.parse(savedVis));
-      else setVisionPillars(defaultVisionPillars);
-
-      const savedViews = localStorage.getItem("portfolio_views");
-      const currentViews = savedViews ? parseInt(savedViews, 10) + 1 : 1;
-      setProfileViews(currentViews);
-      localStorage.setItem("portfolio_views", currentViews.toString());
+      loadLocalDefaults();
       setLoading(false);
     });
 
